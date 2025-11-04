@@ -9,6 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -16,6 +22,7 @@ interface Product {
   price: number;
   description: string;
   specs: string;
+  categoryId: string;
 }
 
 interface Service {
@@ -62,6 +69,7 @@ interface HeroContent {
 }
 
 interface AppData {
+  categories: Category[];
   products: Product[];
   services: Service[];
   about: AboutItem[];
@@ -85,6 +93,7 @@ const Index = () => {
   const [adminPassword, setAdminPassword] = useState('');
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [isAdvantagesVisible, setIsAdvantagesVisible] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const advantagesRef = useRef<HTMLDivElement>(null);
   const defaultAdvantages: Advantage[] = [
     { id: '1', icon: 'UserCheck', title: 'Индивидуальный подбор', description: 'Подбираем аппарат с учетом особенностей слуха, образа жизни и бюджета' },
@@ -103,7 +112,15 @@ const Index = () => {
     { id: '5', name: 'Widex', logoUrl: 'https://www.widex.com/media/images/logo.svg' }
   ];
 
+  const defaultCategories: Category[] = [
+    { id: '1', name: 'Заушные аппараты', icon: 'Ear' },
+    { id: '2', name: 'Внутриушные аппараты', icon: 'Radio' },
+    { id: '3', name: 'Аксессуары', icon: 'Cable' },
+    { id: '4', name: 'Батарейки', icon: 'Battery' }
+  ];
+
   const [data, setData] = useState<AppData>({
+    categories: defaultCategories,
     products: [],
     services: [],
     about: [],
@@ -124,6 +141,7 @@ const Index = () => {
       try {
         const parsed = JSON.parse(stored);
         setData({
+          categories: parsed.categories || defaultCategories,
           products: parsed.products || [],
           services: parsed.services || [],
           about: parsed.about || [],
@@ -367,28 +385,68 @@ const Index = () => {
         {activeSection === 'catalog' && (
           <div className="section-transition">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">КАТАЛОГ</h2>
+            
+            {data.categories.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-8">
+                <Button
+                  onClick={() => setSelectedCategoryId(null)}
+                  variant={selectedCategoryId === null ? "default" : "outline"}
+                  className={`font-bold ${selectedCategoryId === null ? 'bg-primary hover:bg-primary/90 text-white' : 'border-2 border-primary text-primary hover:bg-primary hover:text-white'}`}
+                >
+                  <Icon name="Grid" className="mr-2" size={18} />
+                  Все категории
+                </Button>
+                {data.categories.map((category) => (
+                  <Button
+                    key={category.id}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    variant={selectedCategoryId === category.id ? "default" : "outline"}
+                    className={`font-bold ${selectedCategoryId === category.id ? 'bg-primary hover:bg-primary/90 text-white' : 'border-2 border-primary text-primary hover:bg-primary hover:text-white'}`}
+                  >
+                    <Icon name={category.icon as any} className="mr-2" size={18} fallback="Package" />
+                    {category.name}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {data.products.length === 0 ? (
                 <p className="col-span-full text-center text-muted-foreground py-12">Товары отсутствуют. Добавьте их через админ-панель.</p>
+              ) : data.products.filter(product => selectedCategoryId === null || product.categoryId === selectedCategoryId).length === 0 ? (
+                <p className="col-span-full text-center text-muted-foreground py-12">В этой категории пока нет товаров.</p>
               ) : (
-                data.products.map((product) => (
-                  <Card key={product.id} className="overflow-hidden hover:border-primary transition border-2 card-transition">
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
-                    <CardHeader>
-                      <CardTitle className="text-2xl font-black">{product.name}</CardTitle>
-                      <CardDescription className="text-primary text-xl font-bold">{product.price} ₽</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm mb-2">{product.description}</p>
-                      <p className="text-xs text-muted-foreground">{product.specs}</p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold" onClick={() => setShowAppointmentDialog(true)}>
-                        ЗАКАЗАТЬ
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))
+                data.products
+                  .filter(product => selectedCategoryId === null || product.categoryId === selectedCategoryId)
+                  .map((product) => {
+                    const category = data.categories.find(c => c.id === product.categoryId);
+                    return (
+                      <Card key={product.id} className="overflow-hidden hover:border-primary transition border-2 card-transition">
+                        <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+                        <CardHeader>
+                          <div className="flex items-center gap-2 mb-2">
+                            {category && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs font-bold rounded">
+                                <Icon name={category.icon as any} size={14} fallback="Tag" />
+                                {category.name}
+                              </span>
+                            )}
+                          </div>
+                          <CardTitle className="text-2xl font-black">{product.name}</CardTitle>
+                          <CardDescription className="text-primary text-xl font-bold">{product.price} ₽</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm mb-2">{product.description}</p>
+                          <p className="text-xs text-muted-foreground">{product.specs}</p>
+                        </CardContent>
+                        <CardFooter>
+                          <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold" onClick={() => setShowAppointmentDialog(true)}>
+                            ЗАКАЗАТЬ
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })
               )}
             </div>
           </div>
@@ -702,6 +760,28 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
 }) => {
   const [activeTab, setActiveTab] = useState('catalog');
 
+  const addCategory = () => {
+    const newCategory: Category = {
+      id: Date.now().toString(),
+      name: '',
+      icon: 'Package'
+    };
+    onSave({ ...data, categories: [...data.categories, newCategory] });
+  };
+
+  const updateCategory = (id: string, field: keyof Category, value: string) => {
+    const updated = data.categories.map(c => c.id === id ? { ...c, [field]: value } : c);
+    onSave({ ...data, categories: updated });
+  };
+
+  const deleteCategory = (id: string) => {
+    onSave({ 
+      ...data, 
+      categories: data.categories.filter(c => c.id !== id),
+      products: data.products.map(p => p.categoryId === id ? { ...p, categoryId: '' } : p)
+    });
+  };
+
   const addProduct = () => {
     const newProduct: Product = {
       id: Date.now().toString(),
@@ -709,7 +789,8 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
       imageUrl: '',
       price: 0,
       description: '',
-      specs: ''
+      specs: '',
+      categoryId: data.categories.length > 0 ? data.categories[0].id : ''
     };
     onSave({ ...data, products: [...data.products, newProduct] });
   };
@@ -824,8 +905,9 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-7">
         <TabsTrigger value="home">Главная</TabsTrigger>
+        <TabsTrigger value="categories">Категории</TabsTrigger>
         <TabsTrigger value="catalog">Каталог</TabsTrigger>
         <TabsTrigger value="services">Услуги</TabsTrigger>
         <TabsTrigger value="about">О компании</TabsTrigger>
@@ -917,6 +999,39 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
         </div>
       </TabsContent>
 
+      <TabsContent value="categories" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Управление категориями</h3>
+          <Button onClick={addCategory} className="bg-primary hover:bg-primary/90 text-white font-bold">
+            <Icon name="Plus" className="mr-2" size={16} />
+            Добавить категорию
+          </Button>
+        </div>
+        {data.categories.map((category) => (
+          <Card key={category.id} className="border-2">
+            <CardContent className="pt-6 space-y-3">
+              <div>
+                <Label>Название категории</Label>
+                <Input value={category.name} onChange={(e) => updateCategory(category.id, 'name', e.target.value)} placeholder="Заушные аппараты" />
+              </div>
+              <div>
+                <Label>Иконка (название из Lucide)</Label>
+                <Input value={category.icon} onChange={(e) => updateCategory(category.id, 'icon', e.target.value)} placeholder="Ear, Radio, Battery..." />
+                <p className="text-xs text-muted-foreground mt-1">Примеры: Ear, Radio, Cable, Battery, Package, Tag</p>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded">
+                <Icon name={category.icon as any} className="text-primary" size={24} fallback="Package" />
+                <span className="font-bold">{category.name || 'Предпросмотр категории'}</span>
+              </div>
+              <Button variant="destructive" onClick={() => deleteCategory(category.id)}>
+                <Icon name="Trash2" className="mr-2" size={16} />
+                Удалить категорию
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </TabsContent>
+
       <TabsContent value="catalog" className="space-y-4">
         <Button onClick={addProduct} className="bg-primary hover:bg-primary/90 text-white font-bold">
           <Icon name="Plus" className="mr-2" size={16} />
@@ -925,6 +1040,19 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
         {data.products.map((product) => (
           <Card key={product.id} className="border-2">
             <CardContent className="pt-6 space-y-3">
+              <div>
+                <Label>Категория</Label>
+                <select 
+                  value={product.categoryId} 
+                  onChange={(e) => updateProduct(product.id, 'categoryId', e.target.value)}
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                >
+                  <option value="">Без категории</option>
+                  {data.categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <Label>Название</Label>
                 <Input value={product.name} onChange={(e) => updateProduct(product.id, 'name', e.target.value)} />

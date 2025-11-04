@@ -83,6 +83,7 @@ const Index = () => {
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [isAdvantagesVisible, setIsAdvantagesVisible] = useState(false);
   const advantagesRef = useRef<HTMLDivElement>(null);
   const defaultAdvantages: Advantage[] = [
@@ -181,7 +182,13 @@ const Index = () => {
     if (adminPassword === ADMIN_PASSWORD) {
       setIsAdminAuthed(true);
       setShowAdminDialog(false);
-      toast({ title: 'Вход выполнен', description: 'Добро пожаловать в админ-панель' });
+      setShowWelcomeDialog(true);
+      setAdminPassword('');
+      
+      setTimeout(() => {
+        setShowWelcomeDialog(false);
+        setShowAdminDialog(true);
+      }, 3000);
     } else {
       toast({ title: 'Ошибка', description: 'Неверный пароль', variant: 'destructive' });
     }
@@ -605,20 +612,63 @@ const Index = () => {
             <DialogTitle className="text-3xl font-black">АДМИН-ПАНЕЛЬ</DialogTitle>
           </DialogHeader>
           {!isAdminAuthed ? (
-            <div className="space-y-4">
-              <Label htmlFor="password">Пароль</Label>
-              <Input
-                id="password"
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-              />
-              <Button onClick={handleAdminLogin} className="w-full bg-primary hover:bg-primary/90 text-white font-bold">ВОЙТИ</Button>
+            <div className="flex flex-col items-center justify-center py-8 space-y-6">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Icon name="Lock" className="text-primary" size={40} />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-2xl font-black">ВХОД В СИСТЕМУ</h3>
+                <p className="text-muted-foreground">Введите пароль для доступа к панели управления</p>
+              </div>
+              <div className="w-full max-w-sm space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-base font-bold">Пароль</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+                    placeholder="••••••••"
+                    className="h-12 text-base"
+                  />
+                </div>
+                <Button onClick={handleAdminLogin} className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base">
+                  <Icon name="LogIn" className="mr-2" size={20} />
+                  ВОЙТИ
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground text-center">
+                <p>© 2025 Ясный слух. Все права защищены</p>
+              </div>
             </div>
           ) : (
             <AdminPanel data={data} onSave={saveData} onExport={handleExport} onImport={handleImport} />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+        <DialogContent className="max-w-md">
+          <div className="flex flex-col items-center justify-center py-8 space-y-6 text-center">
+            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+              <Icon name="CheckCircle" className="text-primary" size={50} />
+            </div>
+            <div className="space-y-2">
+              <DialogTitle className="text-3xl font-black">С ВОЗВРАЩЕНИЕМ!</DialogTitle>
+              <p className="text-lg text-muted-foreground">Вы успешно вошли в систему</p>
+            </div>
+            <div className="pt-4 border-t w-full">
+              <p className="text-sm text-muted-foreground">© 2025 Ясный слух</p>
+              <p className="text-xs text-muted-foreground mt-1">Все права защищены</p>
+            </div>
+            <Button 
+              onClick={() => { setShowWelcomeDialog(false); setShowAdminDialog(true); }} 
+              className="w-full bg-primary hover:bg-primary/90 text-white font-bold"
+            >
+              ПЕРЕЙТИ К ПАНЕЛИ
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

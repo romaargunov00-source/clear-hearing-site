@@ -56,6 +56,7 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState<'home' | 'catalog' | 'services' | 'about' | 'articles'>('home');
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -139,11 +140,11 @@ const Index = () => {
       <header className="sticky top-0 z-50 bg-white border-b-4 border-primary shadow-md">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3">
-              <img src="https://cdn.poehali.dev/files/76bd75c3-4d4d-4b91-a795-2a19bb4fd126.png" alt="Ясный слух" className="h-12 w-12" />
-              <h1 className="text-3xl font-black text-foreground tracking-tight">ЯСНЫЙ СЛУХ</h1>
+            <div className="flex items-center gap-2 md:gap-3">
+              <img src="https://cdn.poehali.dev/files/76bd75c3-4d4d-4b91-a795-2a19bb4fd126.png" alt="Ясный слух" className="h-10 w-10 md:h-12 md:w-12" />
+              <h1 className="text-xl md:text-3xl font-black text-foreground tracking-tight">ЯСНЫЙ СЛУХ</h1>
             </div>
-            <nav className="hidden md:flex gap-6">
+            <nav className="hidden lg:flex gap-6">
               <button onClick={() => setActiveSection('home')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'home' ? 'text-primary' : 'text-foreground'}`}>ГЛАВНАЯ</button>
               <button onClick={() => setActiveSection('catalog')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'catalog' ? 'text-primary' : 'text-foreground'}`}>КАТАЛОГ</button>
               <button onClick={() => setActiveSection('services')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'services' ? 'text-primary' : 'text-foreground'}`}>УСЛУГИ</button>
@@ -151,15 +152,31 @@ const Index = () => {
               <button onClick={() => setActiveSection('articles')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'articles' ? 'text-primary' : 'text-foreground'}`}>СТАТЬИ</button>
             </nav>
             <div className="flex gap-2">
-              <Button onClick={() => setShowAppointmentDialog(true)} className="bg-primary hover:bg-primary/90 font-bold text-white">
+              <Button onClick={() => setShowAppointmentDialog(true)} className="bg-primary hover:bg-primary/90 font-bold text-white hidden md:flex">
                 <Icon name="Calendar" className="mr-2" size={18} />
                 ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
               </Button>
-              <Button onClick={() => setShowAdminDialog(true)} variant="outline" size="icon" className="border-2">
+              <Button onClick={() => setShowAppointmentDialog(true)} size="icon" className="bg-primary hover:bg-primary/90 text-white md:hidden">
+                <Icon name="Calendar" size={20} />
+              </Button>
+              <Button onClick={() => setShowMobileMenu(!showMobileMenu)} variant="outline" size="icon" className="border-2 lg:hidden">
+                <Icon name={showMobileMenu ? "X" : "Menu"} size={20} />
+              </Button>
+              <Button onClick={() => setShowAdminDialog(true)} variant="outline" size="icon" className="border-2 hidden lg:flex">
                 <Icon name="Settings" size={18} />
               </Button>
             </div>
           </div>
+          {showMobileMenu && (
+            <nav className="lg:hidden pb-4 space-y-2 animate-fade-in">
+              <button onClick={() => { setActiveSection('home'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'home' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>ГЛАВНАЯ</button>
+              <button onClick={() => { setActiveSection('catalog'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'catalog' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>КАТАЛОГ</button>
+              <button onClick={() => { setActiveSection('services'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'services' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>УСЛУГИ</button>
+              <button onClick={() => { setActiveSection('about'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'about' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>О КОМПАНИИ</button>
+              <button onClick={() => { setActiveSection('articles'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'articles' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>СТАТЬИ</button>
+              <button onClick={() => { setShowAdminDialog(true); setShowMobileMenu(false); }} className="block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition text-foreground">АДМИН-ПАНЕЛЬ</button>
+            </nav>
+          )}
         </div>
       </header>
 
@@ -178,26 +195,26 @@ const Index = () => {
         </div>
       )}
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         {activeSection === 'home' && (
-          <div className="space-y-12 section-transition">
-            <section className="text-center py-20">
-              <h2 className="text-6xl font-black mb-6 text-foreground">ВЕРНЁМ ВАМ МИР ЗВУКОВ</h2>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">Современные слуховые аппараты для комфортной жизни. Консультация специалистов и подбор устройств.</p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white text-lg font-bold px-8" onClick={() => setActiveSection('catalog')}>
+          <div className="space-y-8 md:space-y-12 section-transition">
+            <section className="text-center py-10 md:py-20">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 md:mb-6 text-foreground px-2">ВЕРНЁМ ВАМ МИР ЗВУКОВ</h2>
+              <p className="text-base md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-4">Современные слуховые аппараты для комфортной жизни. Консультация специалистов и подбор устройств.</p>
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 px-4">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white text-base md:text-lg font-bold px-6 md:px-8 w-full sm:w-auto" onClick={() => setActiveSection('catalog')}>
                   <Icon name="Package" className="mr-2" size={20} />
                   ПОСМОТРЕТЬ КАТАЛОГ
                 </Button>
-                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-lg font-bold px-8" onClick={() => setActiveSection('services')}>
+                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-base md:text-lg font-bold px-6 md:px-8 w-full sm:w-auto" onClick={() => setActiveSection('services')}>
                   <Icon name="Briefcase" className="mr-2" size={20} />
                   НАШИ УСЛУГИ
                 </Button>
-                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-lg font-bold px-8" onClick={() => setActiveSection('about')}>
+                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-base md:text-lg font-bold px-6 md:px-8 w-full sm:w-auto" onClick={() => setActiveSection('about')}>
                   <Icon name="Info" className="mr-2" size={20} />
                   О КОМПАНИИ
                 </Button>
-                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-lg font-bold px-8" onClick={() => setActiveSection('articles')}>
+                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-base md:text-lg font-bold px-6 md:px-8 w-full sm:w-auto" onClick={() => setActiveSection('articles')}>
                   <Icon name="BookOpen" className="mr-2" size={20} />
                   СТАТЬИ
                 </Button>
@@ -208,8 +225,8 @@ const Index = () => {
 
         {activeSection === 'catalog' && (
           <div className="section-transition">
-            <h2 className="text-5xl font-black mb-8 text-primary title-transition">КАТАЛОГ</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">КАТАЛОГ</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {data.products.length === 0 ? (
                 <p className="col-span-full text-center text-muted-foreground py-12">Товары отсутствуют. Добавьте их через админ-панель.</p>
               ) : (
@@ -238,8 +255,8 @@ const Index = () => {
 
         {activeSection === 'services' && (
           <div className="section-transition">
-            <h2 className="text-5xl font-black mb-8 text-primary title-transition">УСЛУГИ</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">УСЛУГИ</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {data.services.length === 0 ? (
                 <p className="col-span-full text-center text-muted-foreground py-12">Услуги отсутствуют. Добавьте их через админ-панель.</p>
               ) : (
@@ -272,18 +289,18 @@ const Index = () => {
 
         {activeSection === 'about' && (
           <div className="section-transition">
-            <h2 className="text-5xl font-black mb-8 text-primary title-transition">О КОМПАНИИ</h2>
-            <div className="space-y-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">О КОМПАНИИ</h2>
+            <div className="space-y-4 md:space-y-6">
               {data.about.length === 0 ? (
                 <p className="text-center text-muted-foreground py-12">Информация отсутствует. Добавьте её через админ-панель.</p>
               ) : (
                 data.about.map((item) => (
                   <Card key={item.id} className="border-2 card-transition">
                     <CardHeader>
-                      <CardTitle className="text-3xl font-black">{item.title}</CardTitle>
+                      <CardTitle className="text-xl md:text-2xl lg:text-3xl font-black">{item.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground whitespace-pre-wrap">{item.description}</p>
+                      <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">{item.description}</p>
                     </CardContent>
                   </Card>
                 ))
@@ -294,8 +311,8 @@ const Index = () => {
 
         {activeSection === 'articles' && (
           <div className="section-transition">
-            <h2 className="text-5xl font-black mb-8 text-primary title-transition">СТАТЬИ</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">СТАТЬИ</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {data.articles.length === 0 ? (
                 <p className="col-span-full text-center text-muted-foreground py-12">Статьи отсутствуют. Добавьте их через админ-панель.</p>
               ) : (
@@ -320,11 +337,11 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="bg-secondary border-t-4 border-primary mt-20">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <footer className="bg-secondary border-t-4 border-primary mt-12 md:mt-20">
+        <div className="container mx-auto px-4 py-8 md:py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <div>
-              <h3 className="text-2xl font-black text-primary mb-4">ДОСТАВКА</h3>
+              <h3 className="text-xl md:text-2xl font-black text-primary mb-3 md:mb-4">ДОСТАВКА</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <Icon name="Package" className="text-primary mt-1" size={20} />
@@ -351,7 +368,7 @@ const Index = () => {
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-primary mb-4">ОПЛАТА</h3>
+              <h3 className="text-xl md:text-2xl font-black text-primary mb-3 md:mb-4">ОПЛАТА</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <Icon name="CreditCard" className="text-primary mt-1" size={20} />
@@ -378,7 +395,7 @@ const Index = () => {
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-primary mb-4">КОНТАКТЫ</h3>
+              <h3 className="text-xl md:text-2xl font-black text-primary mb-3 md:mb-4">КОНТАКТЫ</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <Icon name="MapPin" className="text-primary mt-1" size={20} />
@@ -402,8 +419,8 @@ const Index = () => {
               </div>
             </div>
           </div>
-          <div className="border-t border-primary/20 mt-8 pt-6 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="border-t border-primary/20 mt-6 md:mt-8 pt-4 md:pt-6 text-center">
+            <p className="text-xs md:text-sm text-muted-foreground">
               © 2025 Ясный слух. Все права защищены
             </p>
           </div>
@@ -411,36 +428,36 @@ const Index = () => {
       </footer>
 
       <Dialog open={showAppointmentDialog} onOpenChange={setShowAppointmentDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[95vw] sm:w-full">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black text-center">ЗАПИСЬ НА КОНСУЛЬТАЦИЮ</DialogTitle>
-            <DialogDescription className="text-center">Свяжитесь с нами удобным способом</DialogDescription>
+            <DialogTitle className="text-2xl md:text-3xl font-black text-center">ЗАПИСЬ НА КОНСУЛЬТАЦИЮ</DialogTitle>
+            <DialogDescription className="text-center text-sm md:text-base">Свяжитесь с нами удобным способом</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 gap-4 py-4">
-            <Button size="lg" className="bg-[#0088cc] hover:bg-[#0088cc]/90 text-white font-bold h-16 justify-start" asChild>
+          <div className="grid grid-cols-1 gap-3 md:gap-4 py-4">
+            <Button size="lg" className="bg-[#0088cc] hover:bg-[#0088cc]/90 text-white font-bold h-14 md:h-16 justify-start text-left" asChild>
               <a href="https://t.me/+79629102391" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                <Icon name="Send" className="mr-4 flex-shrink-0" size={24} />
-                <div className="flex items-center gap-3 flex-1">
-                  <span className="text-base font-bold">Написать в Telegram</span>
-                  <span className="text-sm opacity-90">+7 (962) 910-23-91</span>
+                <Icon name="Send" className="mr-3 md:mr-4 flex-shrink-0" size={20} />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                  <span className="text-sm md:text-base font-bold truncate">Написать в Telegram</span>
+                  <span className="text-xs md:text-sm opacity-90">+7 (962) 910-23-91</span>
                 </div>
               </a>
             </Button>
-            <Button size="lg" className="bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold h-16 justify-start" asChild>
+            <Button size="lg" className="bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold h-14 md:h-16 justify-start text-left" asChild>
               <a href="https://wa.me/79629102391" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                <Icon name="MessageCircle" className="mr-4 flex-shrink-0" size={24} />
-                <div className="flex items-center gap-3 flex-1">
-                  <span className="text-base font-bold">Написать в WhatsApp</span>
-                  <span className="text-sm opacity-90">+7 (962) 910-23-91</span>
+                <Icon name="MessageCircle" className="mr-3 md:mr-4 flex-shrink-0" size={20} />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                  <span className="text-sm md:text-base font-bold truncate">Написать в WhatsApp</span>
+                  <span className="text-xs md:text-sm opacity-90">+7 (962) 910-23-91</span>
                 </div>
               </a>
             </Button>
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 justify-start" asChild>
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-14 md:h-16 justify-start text-left" asChild>
               <a href="tel:+74957990926" className="flex items-center">
-                <Icon name="Phone" className="mr-4 flex-shrink-0" size={24} />
-                <div className="flex items-center gap-3 flex-1">
-                  <span className="text-base font-bold">Позвонить</span>
-                  <span className="text-sm opacity-90">+7 (495) 799-09-26</span>
+                <Icon name="Phone" className="mr-3 md:mr-4 flex-shrink-0" size={20} />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                  <span className="text-sm md:text-base font-bold truncate">Позвонить</span>
+                  <span className="text-xs md:text-sm opacity-90">+7 (495) 799-09-26</span>
                 </div>
               </a>
             </Button>
@@ -472,18 +489,18 @@ const Index = () => {
       </Dialog>
 
       <Dialog open={selectedArticle !== null} onOpenChange={() => setSelectedArticle(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           {selectedArticle && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-3xl font-black">{selectedArticle.title}</DialogTitle>
-                <DialogDescription>{selectedArticle.date}</DialogDescription>
+                <DialogTitle className="text-xl md:text-2xl lg:text-3xl font-black">{selectedArticle.title}</DialogTitle>
+                <DialogDescription className="text-sm">{selectedArticle.date}</DialogDescription>
               </DialogHeader>
               {selectedArticle.imageUrl && (
-                <img src={selectedArticle.imageUrl} alt={selectedArticle.title} className="w-full h-64 object-cover rounded-lg" />
+                <img src={selectedArticle.imageUrl} alt={selectedArticle.title} className="w-full h-48 md:h-64 object-cover rounded-lg" />
               )}
               <div className="prose max-w-none">
-                <p className="text-base text-foreground whitespace-pre-wrap">{selectedArticle.content}</p>
+                <p className="text-sm md:text-base text-foreground whitespace-pre-wrap">{selectedArticle.content}</p>
               </div>
             </>
           )}

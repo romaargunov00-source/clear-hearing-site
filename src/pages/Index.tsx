@@ -612,6 +612,14 @@ const Index = () => {
                     <p>вс.: выходной</p>
                   </div>
                 </div>
+                <Button
+                  variant="outline"
+                  className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold mt-2"
+                  onClick={() => window.open('https://yandex.ru/maps/org/yasny_zvuk/157540054545/?ll=37.739680%2C55.654808&z=16', '_blank')}
+                >
+                  <Icon name="Map" className="mr-2" size={18} />
+                  ОТКРЫТЬ НА КАРТЕ
+                </Button>
               </div>
             </div>
           </div>

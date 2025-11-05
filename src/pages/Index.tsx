@@ -403,26 +403,18 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
+          <div className="text-center py-8 space-y-6">
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Icon name="Ear" className="text-primary" size={40} />
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center animate-in zoom-in duration-500">
+                <Icon name="Ear" className="text-primary" size={48} />
               </div>
             </div>
-            <DialogTitle className="text-center text-2xl font-black">Добро пожаловать на наш сайт!</DialogTitle>
-            <DialogDescription className="text-center pt-4 space-y-4">
-              <p className="text-base">
-                Мы рады приветствовать вас в центре слухопротезирования <span className="font-bold text-primary">ЯСНЫЙ СЛУХ</span>.
-              </p>
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom duration-700">
+              <h2 className="text-3xl font-black text-primary">Добро пожаловать на наш сайт!</h2>
               <p className="text-sm text-muted-foreground border-t pt-4">
                 © 2025 Ясный слух. Все права защищены
               </p>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center pt-2">
-            <Button onClick={() => setShowWelcomeDialog(false)} className="bg-primary hover:bg-primary/90 text-white font-bold px-8">
-              Начать
-            </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

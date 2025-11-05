@@ -107,6 +107,7 @@ const ADMIN_PASSWORD = '3956Qqqq';
 
 const Index = () => {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'home' | 'catalog' | 'services' | 'about' | 'articles'>('home');
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -213,6 +214,15 @@ const Index = () => {
         console.error('Failed to parse cart', e);
       }
     }
+    
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setTimeout(() => {
+        setShowWelcomeDialog(true);
+      }, 300);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -369,8 +379,54 @@ const Index = () => {
 
   const scrollItems = [...data.products, ...data.services];
 
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center z-50">
+        <div className="text-center space-y-6">
+          <div className="relative w-32 h-32 mx-auto">
+            <div className="absolute inset-0 rounded-full border-8 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-8 border-transparent border-t-primary animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Icon name="Ear" className="text-primary animate-pulse" size={48} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-primary animate-pulse">ЯСНЫЙ СЛУХ</h2>
+            <p className="text-sm text-muted-foreground">Загрузка...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Icon name="Ear" className="text-primary" size={40} />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl font-black">Добро пожаловать на наш сайт!</DialogTitle>
+            <DialogDescription className="text-center pt-4 space-y-4">
+              <p className="text-base">
+                Мы рады приветствовать вас в центре слухопротезирования <span className="font-bold text-primary">ЯСНЫЙ СЛУХ</span>.
+              </p>
+              <p className="text-sm text-muted-foreground border-t pt-4">
+                © 2025 Ясный слух. Все права защищены
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-2">
+            <Button onClick={() => setShowWelcomeDialog(false)} className="bg-primary hover:bg-primary/90 text-white font-bold px-8">
+              Начать
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       <header className="sticky top-0 z-50 bg-white border-b-4 border-primary shadow-md">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">

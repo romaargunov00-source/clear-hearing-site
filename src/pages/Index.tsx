@@ -217,9 +217,6 @@ const Index = () => {
     
     const timer = setTimeout(() => {
       setIsLoading(false);
-      setTimeout(() => {
-        setShowWelcomeDialog(true);
-      }, 300);
     }, 1000);
     
     return () => clearTimeout(timer);
@@ -401,24 +398,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
-        <DialogContent className="max-w-md">
-          <div className="text-center py-8 space-y-6">
-            <div className="flex justify-center mb-4">
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center animate-in zoom-in duration-500">
-                <Icon name="Ear" className="text-primary" size={48} />
-              </div>
-            </div>
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom duration-700">
-              <h2 className="text-3xl font-black text-primary">Добро пожаловать на наш сайт!</h2>
-              <p className="text-sm text-muted-foreground border-t pt-4">
-                © 2025 Ясный слух. Все права защищены
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
+
       <header className="sticky top-0 z-50 bg-white border-b-4 border-primary shadow-md">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">

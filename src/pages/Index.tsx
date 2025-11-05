@@ -109,7 +109,7 @@ const ADMIN_PASSWORD = '3956Qqqq';
 const Index = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'home' | 'catalog' | 'services' | 'about' | 'articles'>('home');
+  const [activeSection, setActiveSection] = useState<'home' | 'catalog' | 'services' | 'about' | 'articles' | 'reviews'>('home');
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -414,6 +414,7 @@ const Index = () => {
               <button onClick={() => setActiveSection('services')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'services' ? 'text-primary' : 'text-foreground'}`}>УСЛУГИ</button>
               <button onClick={() => setActiveSection('about')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'about' ? 'text-primary' : 'text-foreground'}`}>О КОМПАНИИ</button>
               <button onClick={() => setActiveSection('articles')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'articles' ? 'text-primary' : 'text-foreground'}`}>СТАТЬИ</button>
+              <button onClick={() => setActiveSection('reviews')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'reviews' ? 'text-primary' : 'text-foreground'}`}>ОТЗЫВЫ</button>
             </nav>
             <div className="flex gap-2">
               <Button onClick={() => setShowAppointmentDialog(true)} className="bg-primary hover:bg-primary/90 font-bold text-white hidden md:flex">
@@ -446,6 +447,7 @@ const Index = () => {
               <button onClick={() => { setActiveSection('services'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'services' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>УСЛУГИ</button>
               <button onClick={() => { setActiveSection('about'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'about' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>О КОМПАНИИ</button>
               <button onClick={() => { setActiveSection('articles'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'articles' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>СТАТЬИ</button>
+              <button onClick={() => { setActiveSection('reviews'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'reviews' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>ОТЗЫВЫ</button>
               <button onClick={() => { setShowAdminDialog(true); setShowMobileMenu(false); }} className="block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition text-foreground">АДМИН-ПАНЕЛЬ</button>
             </nav>
           )}
@@ -709,6 +711,54 @@ const Index = () => {
                   </Card>
                 ))
               )}
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'reviews' && (
+          <div className="section-transition">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">ОТЗЫВЫ</h2>
+            <div className="max-w-4xl mx-auto">
+              <Card className="border-4 border-primary overflow-hidden">
+                <CardHeader className="bg-primary/5 text-center pb-8">
+                  <div className="flex justify-center mb-6">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Icon name="MessageSquare" className="text-primary" size={40} />
+                    </div>
+                  </div>
+                  <CardTitle className="text-3xl md:text-4xl font-black mb-4">
+                    ПОДЕЛИТЕСЬ СВОИМ МНЕНИЕМ!
+                  </CardTitle>
+                  <CardDescription className="text-base md:text-lg text-foreground">
+                    Ваш отзыв очень важен для нас и поможет другим клиентам сделать правильный выбор
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="py-8 px-6 space-y-6">
+                  <div className="space-y-4 text-center">
+                    <p className="text-lg md:text-xl font-bold text-foreground">
+                      Мы будем благодарны за ваш честный отзыв о нашем магазине и качестве обслуживания
+                    </p>
+                    <div className="flex justify-center gap-2 text-yellow-500">
+                      <Icon name="Star" size={32} fill="currentColor" />
+                      <Icon name="Star" size={32} fill="currentColor" />
+                      <Icon name="Star" size={32} fill="currentColor" />
+                      <Icon name="Star" size={32} fill="currentColor" />
+                      <Icon name="Star" size={32} fill="currentColor" />
+                    </div>
+                  </div>
+                  <Button 
+                    size="lg"
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-lg h-16"
+                    onClick={() => window.open('https://yandex.ru/maps/org/yasny_zvuk/157540054545/reviews', '_blank')}
+                  >
+                    <Icon name="ExternalLink" className="mr-3" size={24} />
+                    ОСТАВИТЬ ОТЗЫВ НА ЯНДЕКС.КАРТАХ
+                  </Button>
+                  <p className="text-sm text-center text-muted-foreground">
+                    Нажмите на кнопку, чтобы перейти на страницу отзывов в Яндекс.Картах
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}

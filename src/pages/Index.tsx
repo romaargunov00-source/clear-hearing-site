@@ -284,42 +284,37 @@ const Index = () => {
       return;
     }
 
-    setOrderProcessing(true);
+    const newOrder: Order = {
+      id: Date.now().toString(),
+      items: [...cart],
+      total: getTotalPrice(),
+      customer: { ...orderForm },
+      date: new Date().toLocaleString('ru-RU'),
+      status: 'new'
+    };
+    
+    const updatedData = {
+      ...data,
+      orders: [...data.orders, newOrder]
+    };
+    saveData(updatedData);
+    
+    setOrderSuccess(true);
     
     setTimeout(() => {
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        items: [...cart],
-        total: getTotalPrice(),
-        customer: { ...orderForm },
-        date: new Date().toLocaleString('ru-RU'),
-        status: 'new'
-      };
-      
-      const updatedData = {
-        ...data,
-        orders: [...data.orders, newOrder]
-      };
-      saveData(updatedData);
-      
-      setOrderProcessing(false);
-      setOrderSuccess(true);
-      
-      setTimeout(() => {
-        setOrderSuccess(false);
-        setShowCheckoutDialog(false);
-        setCart([]);
-        localStorage.removeItem(CART_STORAGE_KEY);
-        setOrderForm({
-          firstName: '',
-          lastName: '',
-          phone: '',
-          email: '',
-          address: '',
-          comment: ''
-        });
-        toast({ title: 'Заказ оформлен!', description: 'Скоро с вами свяжется наш менеджер' });
-      }, 3000);
+      setOrderSuccess(false);
+      setShowCheckoutDialog(false);
+      setCart([]);
+      localStorage.removeItem(CART_STORAGE_KEY);
+      setOrderForm({
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: '',
+        address: '',
+        comment: ''
+      });
+      toast({ title: 'Заказ оформлен!', description: 'Скоро с вами свяжется наш менеджер' });
     }, 3000);
   };
 
@@ -962,22 +957,7 @@ const Index = () => {
               После отправки заказа наш менеджер свяжется с вами в течение 1 часа для уточнения способа доставки и оплаты.
             </DialogDescription>
           </DialogHeader>
-          {orderProcessing ? (
-            <div className="text-center py-12 space-y-6">
-              <div className="relative w-32 h-32 mx-auto">
-                <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping"></div>
-                <div className="relative w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center">
-                  <img 
-                    src="https://cdn.poehali.dev/files/f36a0ed4-282d-4577-86b7-9e579685d081.png" 
-                    alt="Processing" 
-                    className="w-20 h-20 animate-spin"
-                    style={{ animationDuration: '2s' }}
-                  />
-                </div>
-              </div>
-              <p className="text-xl font-black">Заказ оформляется...</p>
-            </div>
-          ) : orderSuccess ? (
+          {orderSuccess ? (
             <div className="text-center py-12 space-y-4">
               <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Icon name="CheckCircle" className="text-primary" size={40} />

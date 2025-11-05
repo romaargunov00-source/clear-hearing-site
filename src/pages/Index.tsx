@@ -377,32 +377,24 @@ const Index = () => {
                   )}
                 </div>
 
-                <div className="bg-background rounded-2xl p-8 md:p-12 border-2 border-primary/20">
-                  <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-center mb-4 title-transition">
-                    ЧТО ГОВОРЯТ <span className="text-primary">НАШИ КЛИЕНТЫ</span>
-                  </h3>
-                  <p className="text-center text-base md:text-lg text-muted-foreground mb-8">
-                    Реальные отзывы клиентов на Яндекс.Картах
-                  </p>
-                  
-                  <div className="w-full rounded-xl overflow-hidden border-2 border-primary/20">
-                    <iframe
-                      src="https://yandex.ru/maps-reviews-widget/157540054545?comments"
-                      className="w-full h-[400px] md:h-[500px]"
-                      frameBorder="0"
-                      title="Отзывы на Яндекс.Картах"
-                    />
-                  </div>
-                  
-                  <div className="text-center mt-6">
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 md:p-12 border-2 border-primary/30">
+                  <div className="text-center space-y-6">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <Icon name="Star" className="text-primary" size={40} />
+                    </div>
+                    <h3 className="text-2xl md:text-3xl lg:text-4xl font-black title-transition">
+                      ПОДЕЛИТЕСЬ СВОИМ <span className="text-primary">ОПЫТОМ</span>
+                    </h3>
+                    <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+                      Ваше мнение очень важно для нас! Оставьте отзыв на Яндекс.Картах и помогите другим клиентам сделать правильный выбор
+                    </p>
                     <Button
                       size="lg"
-                      variant="outline"
-                      className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold"
+                      className="bg-primary hover:bg-primary/90 text-white font-bold text-lg px-8"
                       onClick={() => window.open('https://yandex.ru/maps/org/yasny_zvuk/157540054545/?ll=37.739680%2C55.654808&z=16', '_blank')}
                     >
-                      <Icon name="ExternalLink" className="mr-2" size={20} />
-                      ПОСМОТРЕТЬ ВСЕ ОТЗЫВЫ
+                      <Icon name="MessageSquare" className="mr-2" size={22} />
+                      ОСТАВИТЬ ОТЗЫВ
                     </Button>
                   </div>
                 </div>

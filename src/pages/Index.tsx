@@ -723,7 +723,11 @@ const Index = () => {
                 <CardHeader className="bg-primary/5 text-center pb-8">
                   <div className="flex justify-center mb-6">
                     <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Icon name="MessageSquare" className="text-primary" size={40} />
+                      <img 
+                        src="https://static.tildacdn.com/tild3866-6638-4437-b834-626430663331/icon-yandex-maps-mar.svg" 
+                        alt="Яндекс.Карты"
+                        className="w-12 h-12"
+                      />
                     </div>
                   </div>
                   <CardTitle className="text-3xl md:text-4xl font-black mb-4">

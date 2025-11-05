@@ -228,6 +228,18 @@ const Index = () => {
   }, [cart]);
 
   useEffect(() => {
+    const sectionTitles = {
+      'home': 'Главная',
+      'catalog': 'Каталог',
+      'services': 'Услуги',
+      'about': 'О компании',
+      'articles': 'Статьи',
+      'reviews': 'Отзывы'
+    };
+    document.title = `Ясный слух - ${sectionTitles[activeSection]}`;
+  }, [activeSection]);
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {

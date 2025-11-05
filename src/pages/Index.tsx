@@ -419,7 +419,9 @@ const Index = () => {
                     const category = data.categories.find(c => c.id === product.categoryId);
                     return (
                       <Card key={product.id} className="overflow-hidden hover:border-primary transition border-2 card-transition">
-                        <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+                        <div className="w-full h-48 bg-secondary/30 flex items-center justify-center p-4">
+                          <img src={product.imageUrl} alt={product.name} className="max-w-full max-h-full object-contain" />
+                        </div>
                         <CardHeader>
                           <div className="flex items-center gap-2 mb-2">
                             {category && (

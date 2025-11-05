@@ -502,6 +502,10 @@ const Index = () => {
                   <Icon name="BookOpen" className="mr-2" size={20} />
                   СТАТЬИ
                 </Button>
+                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-base md:text-lg font-bold px-6 md:px-8 w-full sm:w-auto" onClick={() => setActiveSection('reviews')}>
+                  <Icon name="Star" className="mr-2" size={20} />
+                  ОТЗЫВЫ
+                </Button>
               </div>
             </section>
 

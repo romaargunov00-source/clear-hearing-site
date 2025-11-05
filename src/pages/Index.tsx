@@ -556,6 +556,61 @@ const Index = () => {
                 </div>
               </div>
             </section>
+
+            <section className="py-12 md:py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-3xl">
+              <div className="container mx-auto px-4">
+                <div className="max-w-4xl mx-auto">
+                  <div className="text-center mb-8 md:mb-12 animate-in fade-in slide-in-from-bottom duration-500">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-primary">
+                      ВАШЕ МНЕНИЕ ВАЖНО ДЛЯ НАС!
+                    </h2>
+                    <p className="text-base md:text-lg text-muted-foreground">
+                      Поделитесь опытом покупки и помогите другим клиентам сделать правильный выбор
+                    </p>
+                  </div>
+                  
+                  <Card className="border-4 border-primary overflow-hidden animate-in zoom-in duration-700">
+                    <CardHeader className="bg-white text-center pb-6">
+                      <div className="flex justify-center mb-4">
+                        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                          <img 
+                            src="https://static.tildacdn.com/tild3866-6638-4437-b834-626430663331/icon-yandex-maps-mar.svg" 
+                            alt="Яндекс.Карты"
+                            className="w-12 h-12"
+                          />
+                        </div>
+                      </div>
+                      <CardTitle className="text-2xl md:text-3xl font-black mb-3">
+                        ОСТАВЬТЕ ОТЗЫВ О НАС
+                      </CardTitle>
+                      <CardDescription className="text-base text-foreground">
+                        Мы будем благодарны за честный отзыв о качестве наших товаров и обслуживания
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="py-6 space-y-4">
+                      <div className="flex justify-center gap-2 text-yellow-500">
+                        <Icon name="Star" size={28} fill="currentColor" />
+                        <Icon name="Star" size={28} fill="currentColor" />
+                        <Icon name="Star" size={28} fill="currentColor" />
+                        <Icon name="Star" size={28} fill="currentColor" />
+                        <Icon name="Star" size={28} fill="currentColor" />
+                      </div>
+                      <Button 
+                        size="lg"
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-base md:text-lg h-14"
+                        onClick={() => window.open('https://yandex.ru/maps/org/yasny_zvuk/157540054545/reviews', '_blank')}
+                      >
+                        <Icon name="ExternalLink" className="mr-2" size={20} />
+                        ОСТАВИТЬ ОТЗЫВ НА ЯНДЕКС.КАРТАХ
+                      </Button>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Нажмите на кнопку, чтобы перейти на страницу отзывов
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </section>
           </div>
         )}
 

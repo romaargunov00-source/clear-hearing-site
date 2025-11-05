@@ -378,19 +378,20 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center z-50">
-        <div className="text-center space-y-3">
-          <div className="relative w-64 h-32 mx-auto">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img 
-                src="https://cdn.poehali.dev/files/8c127edc-be78-4a58-bceb-e0d804eb36c2.png" 
-                alt="Ясный звук - слуховые аппараты" 
-                className="w-full h-full object-contain animate-pulse"
+      <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div className="relative w-20 h-20">
+          <div className="absolute inset-0 flex items-center justify-center animate-spin">
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div
+                key={i}
+                className="absolute w-3 h-3 bg-[#4A90E2] rounded-full"
+                style={{
+                  transform: `rotate(${i * 45}deg) translateY(-28px)`,
+                  opacity: 1 - (i * 0.12)
+                }}
               />
-            </div>
+            ))}
           </div>
-          <p className="text-xl text-muted-foreground py-0 mx-[57px] my-[46px] font-bold">Загрузка сайта, ожидайте!
-Добро пожаловать, рады вас видеть ❤</p>
         </div>
       </div>
     );

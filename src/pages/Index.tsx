@@ -30,6 +30,22 @@ interface CartItem {
   quantity: number;
 }
 
+interface Order {
+  id: string;
+  items: CartItem[];
+  total: number;
+  customer: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    address: string;
+    comment: string;
+  };
+  date: string;
+  status: 'new' | 'processing' | 'completed';
+}
+
 interface Service {
   id: string;
   name: string;
@@ -82,6 +98,7 @@ interface AppData {
   advantages: Advantage[];
   partners: Partner[];
   hero: HeroContent;
+  orders: Order[];
 }
 
 const STORAGE_KEY = 'yasny-slukh-data';
@@ -150,7 +167,8 @@ const Index = () => {
       highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
       subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
       description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
-    }
+    },
+    orders: []
   });
 
   const loadData = () => {
@@ -171,7 +189,8 @@ const Index = () => {
             highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
             subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
             description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
-          }
+          },
+          orders: parsed.orders || []
         });
       } catch (e) {
         console.error('Failed to parse data', e);
@@ -268,6 +287,21 @@ const Index = () => {
     setOrderProcessing(true);
     
     setTimeout(() => {
+      const newOrder: Order = {
+        id: Date.now().toString(),
+        items: [...cart],
+        total: getTotalPrice(),
+        customer: { ...orderForm },
+        date: new Date().toLocaleString('ru-RU'),
+        status: 'new'
+      };
+      
+      const updatedData = {
+        ...data,
+        orders: [...data.orders, newOrder]
+      };
+      saveData(updatedData);
+      
       setOrderProcessing(false);
       setOrderSuccess(true);
       
@@ -929,11 +963,19 @@ const Index = () => {
             </DialogDescription>
           </DialogHeader>
           {orderProcessing ? (
-            <div className="text-center py-12 space-y-4">
-              <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-                <Icon name="Clock" className="text-primary" size={40} />
+            <div className="text-center py-12 space-y-6">
+              <div className="relative w-32 h-32 mx-auto">
+                <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping"></div>
+                <div className="relative w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center">
+                  <img 
+                    src="https://cdn.poehali.dev/files/f36a0ed4-282d-4577-86b7-9e579685d081.png" 
+                    alt="Processing" 
+                    className="w-20 h-20 animate-spin"
+                    style={{ animationDuration: '2s' }}
+                  />
+                </div>
               </div>
-              <p className="text-lg font-bold">Заказ оформляется...</p>
+              <p className="text-xl font-black">Заказ оформляется...</p>
             </div>
           ) : orderSuccess ? (
             <div className="text-center py-12 space-y-4">
@@ -1201,15 +1243,20 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
     onSave({ ...data, hero: { ...data.hero, [field]: value } });
   };
 
+  const deleteOrder = (id: string) => {
+    onSave({ ...data, orders: data.orders.filter(o => o.id !== id) });
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-7">
+      <TabsList className="grid w-full grid-cols-8">
         <TabsTrigger value="home">Главная</TabsTrigger>
         <TabsTrigger value="categories">Категории</TabsTrigger>
         <TabsTrigger value="catalog">Каталог</TabsTrigger>
         <TabsTrigger value="services">Услуги</TabsTrigger>
         <TabsTrigger value="about">О компании</TabsTrigger>
         <TabsTrigger value="articles">Статьи</TabsTrigger>
+        <TabsTrigger value="orders">Заказы</TabsTrigger>
         <TabsTrigger value="data">Данные</TabsTrigger>
       </TabsList>
 
@@ -1473,6 +1520,80 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
             </CardContent>
           </Card>
         ))}
+      </TabsContent>
+
+      <TabsContent value="orders" className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Заказы ({data.orders.length})</h3>
+        </div>
+        {data.orders.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Icon name="ShoppingCart" className="mx-auto mb-4" size={48} />
+            <p>Заказов пока нет</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {[...data.orders].reverse().map((order) => (
+              <Card key={order.id} className="border-2">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">Заказ #{order.id}</CardTitle>
+                      <CardDescription>{order.date}</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        order.status === 'new' ? 'bg-green-100 text-green-800' :
+                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.status === 'new' ? 'НОВЫЙ' : order.status === 'processing' ? 'В ОБРАБОТКЕ' : 'ВЫПОЛНЕН'}
+                      </span>
+                      <Button variant="destructive" size="sm" onClick={() => deleteOrder(order.id)}>
+                        <Icon name="Trash2" size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-bold flex items-center gap-2">
+                        <Icon name="User" size={16} />
+                        Клиент:
+                      </h4>
+                      <div className="text-sm space-y-1 bg-secondary/30 p-3 rounded">
+                        <p><strong>Имя:</strong> {order.customer.firstName} {order.customer.lastName}</p>
+                        <p><strong>Телефон:</strong> {order.customer.phone}</p>
+                        {order.customer.email && <p><strong>Email:</strong> {order.customer.email}</p>}
+                        <p><strong>Адрес:</strong> {order.customer.address}</p>
+                        {order.customer.comment && <p><strong>Комментарий:</strong> {order.customer.comment}</p>}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-bold flex items-center gap-2">
+                        <Icon name="ShoppingCart" size={16} />
+                        Товары:
+                      </h4>
+                      <div className="text-sm space-y-2 bg-secondary/30 p-3 rounded">
+                        {order.items.map((item, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span>{item.product.name} × {item.quantity}</span>
+                            <span className="font-bold">{(item.product.price * item.quantity).toLocaleString()} ₽</span>
+                          </div>
+                        ))}
+                        <div className="border-t pt-2 flex justify-between font-bold text-base">
+                          <span>ИТОГО:</span>
+                          <span className="text-primary">{order.total.toLocaleString()} ₽</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="data" className="space-y-4">

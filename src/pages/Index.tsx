@@ -90,6 +90,13 @@ interface HeroContent {
   imageUrl?: string;
 }
 
+interface TopBarInfo {
+  city: string;
+  phone: string;
+  email: string;
+  callbackText: string;
+}
+
 interface AppData {
   categories: Category[];
   products: Product[];
@@ -100,6 +107,7 @@ interface AppData {
   partners: Partner[];
   hero: HeroContent;
   orders: Order[];
+  topBar: TopBarInfo;
 }
 
 const STORAGE_KEY = 'yasny-slukh-data';
@@ -170,7 +178,13 @@ const Index = () => {
       subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
       description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
     },
-    orders: []
+    orders: [],
+    topBar: {
+      city: 'Москва',
+      phone: '8 (800) 707-92-34',
+      email: 'info@yasniysluh.ru',
+      callbackText: 'Обратный звонок'
+    }
   });
 
   const loadData = () => {
@@ -192,7 +206,13 @@ const Index = () => {
             subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
             description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
           },
-          orders: parsed.orders || []
+          orders: parsed.orders || [],
+          topBar: parsed.topBar || {
+            city: 'Москва',
+            phone: '8 (800) 707-92-34',
+            email: 'info@yasniysluh.ru',
+            callbackText: 'Обратный звонок'
+          }
         });
       } catch (e) {
         console.error('Failed to parse data', e);
@@ -413,6 +433,25 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
 
+      <div className="bg-gray-100 border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between py-2 text-sm">
+            <div className="flex items-center gap-6">
+              <button className="flex items-center gap-2 hover:text-primary transition">
+                <Icon name="MapPin" size={16} />
+                <span>{data.topBar.city}</span>
+              </button>
+              <a href={`mailto:${data.topBar.email}`} className="hover:text-primary transition hidden md:inline">
+                {data.topBar.email}
+              </a>
+            </div>
+            <button onClick={() => setShowAppointmentDialog(true)} className="text-primary hover:underline font-medium">
+              {data.topBar.callbackText}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <header className="sticky top-0 z-50 bg-white shadow-md">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
@@ -420,22 +459,24 @@ const Index = () => {
               <img src="https://cdn.poehali.dev/files/76bd75c3-4d4d-4b91-a795-2a19bb4fd126.png" alt="Ясный слух" className="h-10 w-10 md:h-12 md:w-12" />
               <h1 className="text-xl md:text-3xl font-black text-foreground tracking-tight">ЯСНЫЙ СЛУХ</h1>
             </button>
-            <nav className="hidden lg:flex gap-6">
-              <button onClick={() => setActiveSection('home')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'home' ? 'text-primary' : 'text-foreground'}`}>ГЛАВНАЯ</button>
-              <button onClick={() => setActiveSection('catalog')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'catalog' ? 'text-primary' : 'text-foreground'}`}>КАТАЛОГ</button>
-              <button onClick={() => setActiveSection('services')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'services' ? 'text-primary' : 'text-foreground'}`}>УСЛУГИ</button>
-              <button onClick={() => setActiveSection('about')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'about' ? 'text-primary' : 'text-foreground'}`}>О КОМПАНИИ</button>
-              <button onClick={() => setActiveSection('articles')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'articles' ? 'text-primary' : 'text-foreground'}`}>СТАТЬИ</button>
-              <button onClick={() => setActiveSection('reviews')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'reviews' ? 'text-primary' : 'text-foreground'}`}>ОТЗЫВЫ</button>
-            </nav>
-            <div className="flex gap-2">
-              <Button onClick={() => setShowAppointmentDialog(true)} className="bg-primary hover:bg-primary/90 font-bold text-white hidden md:flex">
-                <Icon name="Calendar" className="mr-2" size={18} />
-                ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
+
+            <div className="hidden lg:flex items-center gap-4 flex-1 mx-8">
+              <div className="relative flex-1 max-w-md">
+                <Input placeholder="Найдите товар или услугу" className="pl-10" />
+                <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="hidden lg:flex flex-col items-end gap-1">
+              <a href={`tel:${data.topBar.phone.replace(/\s/g, '')}`} className="text-lg font-bold hover:text-primary transition">
+                {data.topBar.phone}
+              </a>
+              <Button onClick={() => setShowAppointmentDialog(true)} className="bg-primary hover:bg-primary/90 font-bold text-white text-sm h-9">
+                Записаться на прием
               </Button>
-              <Button onClick={() => setShowAppointmentDialog(true)} size="icon" className="bg-primary hover:bg-primary/90 text-white md:hidden">
-                <Icon name="Calendar" size={20} />
-              </Button>
+            </div>
+
+            <div className="flex lg:hidden gap-2">
               <Button onClick={() => setShowCartDialog(true)} variant="outline" size="icon" className="border-2 relative">
                 <Icon name="ShoppingCart" size={20} />
                 {cart.length > 0 && (
@@ -444,23 +485,50 @@ const Index = () => {
                   </span>
                 )}
               </Button>
-              <Button onClick={() => setShowMobileMenu(!showMobileMenu)} variant="outline" size="icon" className="border-2 lg:hidden">
+              <Button onClick={() => setShowMobileMenu(!showMobileMenu)} variant="outline" size="icon" className="border-2">
                 <Icon name={showMobileMenu ? "X" : "Menu"} size={20} />
-              </Button>
-              <Button onClick={() => setShowAdminDialog(true)} variant="outline" size="icon" className="border-2 hidden lg:flex">
-                <Icon name="Settings" size={18} />
               </Button>
             </div>
           </div>
+
+          <nav className="hidden lg:flex gap-6 pb-3 border-t pt-3">
+            <button onClick={() => setActiveSection('catalog')} className={`text-sm font-medium hover:text-primary transition ${activeSection === 'catalog' ? 'text-primary' : 'text-foreground'}`}>Слуховые аппараты</button>
+            <button onClick={() => setActiveSection('services')} className={`text-sm font-medium hover:text-primary transition ${activeSection === 'services' ? 'text-primary' : 'text-foreground'}`}>Услуги</button>
+            <button onClick={() => setActiveSection('catalog')} className={`text-sm font-medium hover:text-primary transition ${activeSection === 'catalog' ? 'text-primary' : 'text-foreground'}`}>Адреса центров</button>
+            <button onClick={() => setActiveSection('catalog')} className={`text-sm font-medium hover:text-primary transition ${activeSection === 'catalog' ? 'text-primary' : 'text-foreground'}`}>Аксессуары</button>
+            <Button onClick={() => setShowCartDialog(true)} variant="outline" size="icon" className="border-2 relative ml-auto">
+              <Icon name="ShoppingCart" size={20} />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
+            </Button>
+            <Button onClick={() => setShowAdminDialog(true)} variant="outline" size="icon" className="border-2">
+              <Icon name="Settings" size={18} />
+            </Button>
+          </nav>
+
+          <div className="lg:hidden pb-3 border-t pt-3">
+            <div className="relative mb-3">
+              <Input placeholder="Найдите товар или услугу" className="pl-10" />
+              <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+            <div className="text-center">
+              <a href={`tel:${data.topBar.phone.replace(/\s/g, '')}`} className="text-lg font-bold hover:text-primary transition">
+                {data.topBar.phone}
+              </a>
+            </div>
+          </div>
           {showMobileMenu && (
-            <nav className="lg:hidden pb-4 space-y-2 animate-fade-in">
-              <button onClick={() => { setActiveSection('home'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'home' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>ГЛАВНАЯ</button>
-              <button onClick={() => { setActiveSection('catalog'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'catalog' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>КАТАЛОГ</button>
-              <button onClick={() => { setActiveSection('services'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'services' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>УСЛУГИ</button>
-              <button onClick={() => { setActiveSection('about'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'about' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>О КОМПАНИИ</button>
-              <button onClick={() => { setActiveSection('articles'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'articles' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>СТАТЬИ</button>
-              <button onClick={() => { setActiveSection('reviews'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition ${activeSection === 'reviews' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>ОТЗЫВЫ</button>
-              <button onClick={() => { setShowAdminDialog(true); setShowMobileMenu(false); }} className="block w-full text-left py-2 px-4 rounded font-bold hover:bg-primary/10 transition text-foreground">АДМИН-ПАНЕЛЬ</button>
+            <nav className="lg:hidden pb-4 space-y-2 animate-fade-in border-t pt-3">
+              <button onClick={() => { setActiveSection('catalog'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition ${activeSection === 'catalog' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>Слуховые аппараты</button>
+              <button onClick={() => { setActiveSection('services'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition ${activeSection === 'services' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>Услуги</button>
+              <button onClick={() => { setActiveSection('catalog'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition ${activeSection === 'catalog' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>Адреса центров</button>
+              <button onClick={() => { setActiveSection('catalog'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition ${activeSection === 'catalog' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>Аксессуары</button>
+              <button onClick={() => { setActiveSection('about'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition ${activeSection === 'about' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>О компании</button>
+              <button onClick={() => { setActiveSection('articles'); setShowMobileMenu(false); }} className={`block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition ${activeSection === 'articles' ? 'text-primary bg-primary/10' : 'text-foreground'}`}>Статьи</button>
+              <button onClick={() => { setShowAdminDialog(true); setShowMobileMenu(false); }} className="block w-full text-left py-2 px-4 rounded font-medium hover:bg-primary/10 transition text-foreground">Админ-панель</button>
             </nav>
           )}
         </div>
@@ -1355,14 +1423,19 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
     onSave({ ...data, hero: { ...data.hero, [field]: value } });
   };
 
+  const updateTopBar = (field: keyof TopBarInfo, value: string) => {
+    onSave({ ...data, topBar: { ...data.topBar, [field]: value } });
+  };
+
   const deleteOrder = (id: string) => {
     onSave({ ...data, orders: data.orders.filter(o => o.id !== id) });
   };
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-8">
+      <TabsList className="grid w-full grid-cols-9">
         <TabsTrigger value="home">Главная</TabsTrigger>
+        <TabsTrigger value="settings">Настройки</TabsTrigger>
         <TabsTrigger value="categories">Категории</TabsTrigger>
         <TabsTrigger value="catalog">Каталог</TabsTrigger>
         <TabsTrigger value="services">Услуги</TabsTrigger>
@@ -1371,6 +1444,30 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
         <TabsTrigger value="orders">Заказы</TabsTrigger>
         <TabsTrigger value="data">Данные</TabsTrigger>
       </TabsList>
+
+      <TabsContent value="settings" className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold">Настройки верхней панели</h3>
+          <div className="space-y-3">
+            <div>
+              <Label>Город</Label>
+              <Input value={data.topBar.city} onChange={(e) => updateTopBar('city', e.target.value)} placeholder="Москва" />
+            </div>
+            <div>
+              <Label>Телефон</Label>
+              <Input value={data.topBar.phone} onChange={(e) => updateTopBar('phone', e.target.value)} placeholder="8 (800) 707-92-34" />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input value={data.topBar.email} onChange={(e) => updateTopBar('email', e.target.value)} placeholder="info@example.ru" />
+            </div>
+            <div>
+              <Label>Текст кнопки обратного звонка</Label>
+              <Input value={data.topBar.callbackText} onChange={(e) => updateTopBar('callbackText', e.target.value)} placeholder="Обратный звонок" />
+            </div>
+          </div>
+        </div>
+      </TabsContent>
 
       <TabsContent value="home" className="space-y-6">
         <div className="space-y-4">

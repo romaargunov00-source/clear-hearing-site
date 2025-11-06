@@ -1007,40 +1007,40 @@ const Index = () => {
       <Dialog open={showCartDialog} onOpenChange={setShowCartDialog}>
         <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl md:text-3xl font-black">КОРЗИНА</DialogTitle>
-            <DialogDescription>Просмотрите и измените ваши товары</DialogDescription>
+            <DialogTitle className="text-xl md:text-3xl font-black">КОРЗИНА</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">Просмотрите и измените ваши товары</DialogDescription>
           </DialogHeader>
           {cart.length === 0 ? (
-            <div className="text-center py-12 space-y-4">
-              <Icon name="ShoppingCart" className="mx-auto text-muted-foreground" size={64} />
-              <p className="text-lg text-muted-foreground">Корзина пуста</p>
+            <div className="text-center py-8 md:py-12 space-y-4">
+              <Icon name="ShoppingCart" className="mx-auto text-muted-foreground" size={48} />
+              <p className="text-base md:text-lg text-muted-foreground">Корзина пуста</p>
               <Button onClick={() => { setShowCartDialog(false); setActiveSection('catalog'); }} className="bg-primary hover:bg-primary/90 text-white font-bold">
                 <Icon name="Package" className="mr-2" size={18} />
                 ПЕРЕЙТИ В КАТАЛОГ
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {cart.map((item) => (
                 <Card key={item.product.id} className="border-2">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-20 h-20 bg-secondary/30 rounded flex items-center justify-center flex-shrink-0">
+                  <CardContent className="p-3 md:p-4">
+                    <div className="flex gap-3 md:gap-4">
+                      <div className="w-16 h-16 md:w-20 md:h-20 bg-secondary/30 rounded flex items-center justify-center flex-shrink-0">
                         <img src={item.product.imageUrl} alt={item.product.name} className="max-w-full max-h-full object-contain" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-lg truncate">{item.product.name}</h4>
-                        <p className="text-primary font-bold">{item.product.price} ₽</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Button size="sm" variant="outline" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}>
-                            <Icon name="Minus" size={16} />
+                        <h4 className="font-bold text-sm md:text-lg line-clamp-2 md:truncate">{item.product.name}</h4>
+                        <p className="text-primary font-bold text-base md:text-lg">{item.product.price.toLocaleString()} ₽</p>
+                        <div className="flex items-center gap-1.5 md:gap-2 mt-2">
+                          <Button size="sm" variant="outline" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)} className="h-8 w-8 p-0">
+                            <Icon name="Minus" size={14} />
                           </Button>
-                          <span className="font-bold w-8 text-center">{item.quantity}</span>
-                          <Button size="sm" variant="outline" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}>
-                            <Icon name="Plus" size={16} />
+                          <span className="font-bold w-8 text-center text-sm">{item.quantity}</span>
+                          <Button size="sm" variant="outline" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)} className="h-8 w-8 p-0">
+                            <Icon name="Plus" size={14} />
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => removeFromCart(item.product.id)} className="ml-auto">
-                            <Icon name="Trash2" size={16} />
+                          <Button size="sm" variant="destructive" onClick={() => removeFromCart(item.product.id)} className="ml-auto h-8 w-8 p-0">
+                            <Icon name="Trash2" size={14} />
                           </Button>
                         </div>
                       </div>
@@ -1048,12 +1048,12 @@ const Index = () => {
                   </CardContent>
                 </Card>
               ))}
-              <div className="border-t pt-4 space-y-4">
-                <div className="flex justify-between items-center text-xl font-black">
+              <div className="border-t pt-3 md:pt-4 space-y-3 md:space-y-4">
+                <div className="flex justify-between items-center text-lg md:text-xl font-black">
                   <span>ИТОГО:</span>
                   <span className="text-primary">{getTotalPrice().toLocaleString()} ₽</span>
                 </div>
-                <Button onClick={() => { setShowCartDialog(false); setShowCheckoutDialog(true); }} className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12">
+                <Button onClick={() => { setShowCartDialog(false); setShowCheckoutDialog(true); }} className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11 md:h-12 text-sm md:text-base">
                   <Icon name="CreditCard" className="mr-2" size={18} />
                   ОФОРМИТЬ ЗАКАЗ
                 </Button>

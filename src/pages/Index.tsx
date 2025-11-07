@@ -1275,7 +1275,75 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
   onExport: () => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('catalog');
+  const [saving, setSaving] = useState(false);
+  
+  const handleSaveToDatabase = async () => {
+    setSaving(true);
+    try {
+      const mappedServices = data.services.map(s => ({
+        title: s.name,
+        description: s.description || '',
+        price: '',
+        icon: 'Wrench'
+      }));
+      
+      const mappedArticles = data.articles.map(a => ({
+        title: a.title,
+        content: a.content,
+        image: a.imageUrl,
+        date: a.date
+      }));
+      
+      const mappedAbout = data.about.map(a => ({
+        title: a.title,
+        description: a.description,
+        icon: 'Info'
+      }));
+      
+      const mappedAdvantages = data.advantages.map(a => ({
+        title: a.title,
+        description: a.description,
+        icon: a.icon
+      }));
+      
+      const mappedPartners = data.partners.map(p => ({
+        name: p.name,
+        logo: p.logoUrl
+      }));
+      
+      const mappedHero = {
+        title: data.hero.title,
+        highlightedText: data.hero.highlightedText,
+        subtitle: data.hero.subtitle,
+        description: data.hero.description
+      };
+      
+      const response = await fetch('https://functions.poehali.dev/8181fa7b-ed7e-4e77-acb1-1f69039b9fd9?type=bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          services: mappedServices,
+          articles: mappedArticles,
+          about: mappedAbout,
+          advantages: mappedAdvantages,
+          partners: mappedPartners,
+          hero: mappedHero
+        })
+      });
+      
+      if (response.ok) {
+        toast({ title: 'Успех!', description: 'Все данные сохранены в базе данных' });
+      } else {
+        toast({ title: 'Ошибка', description: 'Не удалось сохранить данные', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Ошибка', description: 'Не удалось подключиться к серверу', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const addCategory = () => {
     const newCategory: Category = {
@@ -1425,17 +1493,29 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-8">
-        <TabsTrigger value="home">Главная</TabsTrigger>
-        <TabsTrigger value="categories">Категории</TabsTrigger>
-        <TabsTrigger value="catalog">Каталог</TabsTrigger>
-        <TabsTrigger value="services">Услуги</TabsTrigger>
-        <TabsTrigger value="about">О компании</TabsTrigger>
-        <TabsTrigger value="articles">Статьи</TabsTrigger>
-        <TabsTrigger value="orders">Заказы</TabsTrigger>
-        <TabsTrigger value="data">Данные</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button 
+          onClick={handleSaveToDatabase} 
+          disabled={saving}
+          className="bg-primary hover:bg-primary/90 text-white font-bold"
+          size="lg"
+        >
+          <Icon name="Save" className="mr-2" size={20} />
+          {saving ? 'Сохранение...' : 'СОХРАНИТЬ В БАЗУ ДАННЫХ'}
+        </Button>
+      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="home">Главная</TabsTrigger>
+          <TabsTrigger value="categories">Категории</TabsTrigger>
+          <TabsTrigger value="catalog">Каталог</TabsTrigger>
+          <TabsTrigger value="services">Услуги</TabsTrigger>
+          <TabsTrigger value="about">О компании</TabsTrigger>
+          <TabsTrigger value="articles">Статьи</TabsTrigger>
+          <TabsTrigger value="orders">Заказы</TabsTrigger>
+          <TabsTrigger value="data">Данные</TabsTrigger>
+        </TabsList>
 
       <TabsContent value="home" className="space-y-6">
         <div className="space-y-4">
@@ -1801,7 +1881,8 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
           </div>
         </div>
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };
 

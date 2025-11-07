@@ -173,29 +173,83 @@ const Index = () => {
     orders: []
   });
 
-  const loadData = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setData({
-          categories: parsed.categories || defaultCategories,
-          products: parsed.products || [],
-          services: parsed.services || [],
-          about: parsed.about || [],
-          articles: parsed.articles || [],
-          advantages: parsed.advantages || defaultAdvantages,
-          partners: parsed.partners || defaultPartners,
-          hero: parsed.hero || {
-            title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
-            highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
-            subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
-            description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
-          },
-          orders: parsed.orders || []
-        });
-      } catch (e) {
-        console.error('Failed to parse data', e);
+  const loadData = async () => {
+    try {
+      const [categoriesRes, productsRes] = await Promise.all([
+        fetch('https://functions.poehali.dev/18f56703-a9d5-4d5d-ac38-86c6f3079366'),
+        fetch('https://functions.poehali.dev/d21add4f-1d9e-4a84-92ca-f909205b9b38')
+      ]);
+      
+      const categoriesData = await categoriesRes.json();
+      const productsData = await productsRes.json();
+      
+      const mappedProducts = productsData.map((p: any) => ({
+        id: String(p.id),
+        name: p.name,
+        imageUrl: p.image_url || '',
+        price: parseFloat(p.price),
+        description: p.description || '',
+        specs: '',
+        categoryId: p.category_id ? String(p.category_id) : '1'
+      }));
+      
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let localData = { services: [], about: [], articles: [], orders: [] };
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          localData = {
+            services: parsed.services || [],
+            about: parsed.about || [],
+            articles: parsed.articles || [],
+            orders: parsed.orders || []
+          };
+        } catch (e) {
+          console.error('Failed to parse local data', e);
+        }
+      }
+      
+      setData({
+        categories: defaultCategories,
+        products: mappedProducts,
+        services: localData.services,
+        about: localData.about,
+        articles: localData.articles,
+        advantages: defaultAdvantages,
+        partners: defaultPartners,
+        hero: {
+          title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
+          highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
+          subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
+          description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
+        },
+        orders: localData.orders
+      });
+    } catch (error) {
+      console.error('Failed to load data from backend', error);
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setData({
+            categories: parsed.categories || defaultCategories,
+            products: parsed.products || [],
+            services: parsed.services || [],
+            about: parsed.about || [],
+            articles: parsed.articles || [],
+            advantages: parsed.advantages || defaultAdvantages,
+            partners: parsed.partners || defaultPartners,
+            hero: parsed.hero || {
+              title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
+              highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
+              subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
+              description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
+            },
+            orders: parsed.orders || []
+          });
+        } catch (e) {
+          console.error('Failed to parse data', e);
+        }
       }
     }
   };

@@ -175,13 +175,15 @@ const Index = () => {
 
   const loadData = async () => {
     try {
-      const [categoriesRes, productsRes] = await Promise.all([
+      const [categoriesRes, productsRes, allDataRes] = await Promise.all([
         fetch('https://functions.poehali.dev/18f56703-a9d5-4d5d-ac38-86c6f3079366'),
-        fetch('https://functions.poehali.dev/d21add4f-1d9e-4a84-92ca-f909205b9b38')
+        fetch('https://functions.poehali.dev/d21add4f-1d9e-4a84-92ca-f909205b9b38'),
+        fetch('https://functions.poehali.dev/8181fa7b-ed7e-4e77-acb1-1f69039b9fd9?type=all')
       ]);
       
       const categoriesData = await categoriesRes.json();
       const productsData = await productsRes.json();
+      const dbData = await allDataRes.json();
       
       const mappedProducts = productsData.map((p: any) => ({
         id: String(p.id),
@@ -193,38 +195,98 @@ const Index = () => {
         categoryId: p.category_id ? String(p.category_id) : '1'
       }));
       
-      const stored = localStorage.getItem(STORAGE_KEY);
-      let localData = { services: [], about: [], articles: [], orders: [] };
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          localData = {
-            services: parsed.services || [],
-            about: parsed.about || [],
-            articles: parsed.articles || [],
-            orders: parsed.orders || []
-          };
-        } catch (e) {
-          console.error('Failed to parse local data', e);
-        }
+      const mappedServices = (dbData.services || []).map((s: any) => ({
+        id: String(s.id),
+        name: s.title,
+        imageUrl: '',
+        contact: '',
+        link: '',
+        description: s.description
+      }));
+      
+      const mappedArticles = (dbData.articles || []).map((a: any) => ({
+        id: String(a.id),
+        title: a.title,
+        content: a.content,
+        imageUrl: a.image || '',
+        date: a.date
+      }));
+      
+      const mappedAbout = (dbData.about || []).map((item: any) => ({
+        id: String(item.id),
+        title: item.title,
+        description: item.description
+      }));
+      
+      const mappedAdvantages = (dbData.advantages || []).map((item: any) => ({
+        id: String(item.id),
+        icon: item.icon,
+        title: item.title,
+        description: item.description
+      }));
+      
+      const mappedPartners = (dbData.partners || []).map((item: any) => ({
+        id: String(item.id),
+        name: item.name,
+        logoUrl: item.logo
+      }));
+      
+      const mappedOrders = (dbData.orders || []).map((o: any) => ({
+        id: String(o.id),
+        items: JSON.parse(o.items || '[]'),
+        total: 0,
+        customer: {
+          firstName: o.customer_name?.split(' ')[0] || '',
+          lastName: o.customer_name?.split(' ')[1] || '',
+          phone: o.customer_phone || '',
+          email: o.customer_email || '',
+          address: '',
+          comment: ''
+        },
+        date: new Date(o.created_at).toLocaleDateString('ru-RU'),
+        status: o.status as 'new' | 'processing' | 'completed'
+      }));
+      
+      let heroData: HeroContent = {
+        title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
+        highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
+        subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
+        description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
+      };
+      
+      if (dbData.hero && dbData.hero.title) {
+        heroData = {
+          title: dbData.hero.title || heroData.title,
+          highlightedText: dbData.hero.highlighted_text || heroData.highlightedText,
+          subtitle: dbData.hero.subtitle || heroData.subtitle,
+          description: dbData.hero.description || heroData.description,
+          imageUrl: dbData.hero.image_url || undefined
+        };
       }
       
       setData({
         categories: defaultCategories,
         products: mappedProducts,
-        services: localData.services,
-        about: localData.about,
-        articles: localData.articles,
-        advantages: defaultAdvantages,
-        partners: defaultPartners,
-        hero: {
-          title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
-          highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
-          subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
-          description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
-        },
-        orders: localData.orders
+        services: mappedServices.length > 0 ? mappedServices : [],
+        about: mappedAbout.length > 0 ? mappedAbout : [],
+        articles: mappedArticles.length > 0 ? mappedArticles : [],
+        advantages: mappedAdvantages.length > 0 ? mappedAdvantages : defaultAdvantages,
+        partners: mappedPartners.length > 0 ? mappedPartners : defaultPartners,
+        hero: heroData,
+        orders: mappedOrders
       });
+      
+      const dataToStore = {
+        services: mappedServices,
+        about: mappedAbout,
+        articles: mappedArticles,
+        orders: mappedOrders,
+        advantages: mappedAdvantages.length > 0 ? mappedAdvantages : defaultAdvantages,
+        partners: mappedPartners.length > 0 ? mappedPartners : defaultPartners,
+        hero: heroData
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
+      
     } catch (error) {
       console.error('Failed to load data from backend', error);
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -1021,7 +1083,7 @@ const Index = () => {
               </div>
             </div>
           ) : (
-            <AdminPanel data={data} onSave={saveData} onExport={handleExport} onImport={handleImport} />
+            <AdminPanel data={data} onSave={saveData} onExport={handleExport} onImport={handleImport} onReload={loadData} />
           )}
         </DialogContent>
       </Dialog>
@@ -1269,11 +1331,12 @@ const Index = () => {
   );
 };
 
-const AdminPanel = ({ data, onSave, onExport, onImport }: {
+const AdminPanel = ({ data, onSave, onExport, onImport, onReload }: {
   data: AppData;
   onSave: (data: AppData) => void;
   onExport: () => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onReload: () => Promise<void>;
 }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('catalog');
@@ -1335,6 +1398,7 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
       
       if (response.ok) {
         toast({ title: 'Успех!', description: 'Все данные сохранены в базе данных' });
+        await onReload();
       } else {
         toast({ title: 'Ошибка', description: 'Не удалось сохранить данные', variant: 'destructive' });
       }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,12 +20,10 @@ import { toast } from 'sonner';
 import Icon from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 
-const DATA_MANAGER_API = 'https://functions.poehali.dev/8181fa7b-ed7e-4e77-acb1-1f69039b9fd9';
-const PRODUCTS_API = 'https://functions.poehali.dev/d21add4f-1d9e-4a84-92ca-f909205b9b38';
-const CATEGORIES_API = 'https://functions.poehali.dev/18f56703-a9d5-4d5d-ac38-86c6f3079366';
+const STORAGE_KEY = 'yasniy_sluh_data';
 
 interface Service {
-  id?: number;
+  id: string;
   title: string;
   description: string;
   price: string;
@@ -32,31 +31,31 @@ interface Service {
 }
 
 interface Article {
-  id?: number;
+  id: string;
   title: string;
   content: string;
-  image: string;
+  imageUrl: string;
   date: string;
 }
 
 interface AboutItem {
-  id?: number;
+  id: string;
   title: string;
   description: string;
   icon: string;
 }
 
 interface Advantage {
-  id?: number;
+  id: string;
   title: string;
   description: string;
   icon: string;
 }
 
 interface Partner {
-  id?: number;
+  id: string;
   name: string;
-  logo: string;
+  logoUrl: string;
 }
 
 interface Hero {
@@ -67,147 +66,234 @@ interface Hero {
 }
 
 interface Order {
-  id: number;
-  customer_name: string;
-  customer_phone: string;
-  customer_email: string;
+  id: string;
   items: any[];
-  total_amount: string;
-  status: string;
-  created_at: string;
+  total: number;
+  customer: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    address: string;
+    comment: string;
+  };
+  date: string;
+  status: 'new' | 'processing' | 'completed';
 }
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
-  slug: string;
-  description: string;
+  icon: string;
 }
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
-  slug: string;
-  description: string;
+  imageUrl: string;
   price: number;
-  image_url: string;
-  category_id: number | null;
-  is_service: boolean;
-  category_name?: string;
+  description: string;
+  specs: string;
+  categoryId: string;
+}
+
+interface AppData {
+  services: Service[];
+  articles: Article[];
+  about: AboutItem[];
+  advantages: Advantage[];
+  partners: Partner[];
+  hero: Hero;
+  orders: Order[];
+  categories: Category[];
+  products: Product[];
 }
 
 const Admin = () => {
-  const [services, setServices] = useState<Service[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [about, setAbout] = useState<AboutItem[]>([]);
-  const [advantages, setAdvantages] = useState<Advantage[]>([]);
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [hero, setHero] = useState<Hero>({
-    title: '',
-    highlightedText: '',
-    subtitle: '',
-    description: '',
-  });
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const [productForm, setProductForm] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    price: '',
-    image_url: '',
-    category_id: '',
-    is_service: false,
+  const navigate = useNavigate();
+  const [data, setData] = useState<AppData>({
+    services: [],
+    articles: [],
+    about: [],
+    advantages: [],
+    partners: [],
+    hero: {
+      title: '',
+      highlightedText: '',
+      subtitle: '',
+      description: '',
+    },
+    orders: [],
+    categories: [],
+    products: [],
   });
 
-  const [categoryForm, setCategoryForm] = useState({
-    name: '',
-    slug: '',
-    description: '',
+  const [newService, setNewService] = useState({ title: '', description: '', price: '', icon: 'Wrench' });
+  const [newArticle, setNewArticle] = useState({ title: '', content: '', imageUrl: '', date: '' });
+  const [newAbout, setNewAbout] = useState({ title: '', description: '', icon: 'Users' });
+  const [newAdvantage, setNewAdvantage] = useState({ title: '', description: '', icon: 'CheckCircle' });
+  const [newPartner, setNewPartner] = useState({ name: '', logoUrl: '' });
+  const [newCategory, setNewCategory] = useState({ name: '', icon: 'Package' });
+  const [newProduct, setNewProduct] = useState({ 
+    name: '', 
+    imageUrl: '', 
+    price: '', 
+    description: '', 
+    specs: '', 
+    categoryId: '' 
   });
 
   useEffect(() => {
-    loadAllData();
-    loadCategories();
-    loadProducts();
+    loadData();
   }, []);
 
-  const loadAllData = async () => {
-    try {
-      const response = await fetch(`${DATA_MANAGER_API}?type=all`);
-      const data = await response.json();
-      
-      setServices(data.services || []);
-      setArticles(data.articles || []);
-      setAbout(data.about || []);
-      setAdvantages(data.advantages || []);
-      setPartners(data.partners || []);
-      setOrders(data.orders || []);
-      
-      if (data.hero) {
-        setHero({
-          title: data.hero.title || '',
-          highlightedText: data.hero.highlighted_text || '',
-          subtitle: data.hero.subtitle || '',
-          description: data.hero.description || '',
+  const loadData = () => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setData({
+          services: parsed.services || [],
+          articles: parsed.articles || [],
+          about: parsed.about || [],
+          advantages: parsed.advantages || [],
+          partners: parsed.partners || [],
+          hero: parsed.hero || { title: '', highlightedText: '', subtitle: '', description: '' },
+          orders: parsed.orders || [],
+          categories: parsed.categories || [],
+          products: parsed.products || [],
         });
+      } catch (e) {
+        console.error('Failed to parse data', e);
       }
-    } catch (error) {
-      toast.error('Ошибка загрузки данных');
     }
   };
 
-  const loadCategories = async () => {
-    try {
-      const response = await fetch(CATEGORIES_API);
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      toast.error('Ошибка загрузки категорий');
-    }
+  const saveData = (newData: AppData) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+    setData(newData);
+    toast.success('Данные сохранены!');
   };
 
-  const loadProducts = async () => {
-    try {
-      const response = await fetch(PRODUCTS_API);
-      const data = await response.json();
-      setProducts(data);
-    } catch (error) {
-      toast.error('Ошибка загрузки товаров');
+  const addService = () => {
+    if (!newService.title || !newService.description) {
+      toast.error('Заполните все поля');
+      return;
     }
+    const service: Service = { ...newService, id: Date.now().toString() };
+    saveData({ ...data, services: [...data.services, service] });
+    setNewService({ title: '', description: '', price: '', icon: 'Wrench' });
   };
 
-  const handleSaveAll = async () => {
-    setSaving(true);
-    try {
-      const response = await fetch(`${DATA_MANAGER_API}?type=bulk`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          services,
-          articles,
-          about,
-          advantages,
-          partners,
-          hero,
-        }),
-      });
+  const deleteService = (id: string) => {
+    saveData({ ...data, services: data.services.filter(s => s.id !== id) });
+  };
 
-      if (response.ok) {
-        toast.success('✅ Все данные сохранены в базе!');
-        await loadAllData();
-      } else {
-        toast.error('Ошибка сохранения данных');
-      }
-    } catch (error) {
-      toast.error('Ошибка сохранения данных');
-    } finally {
-      setSaving(false);
+  const addArticle = () => {
+    if (!newArticle.title || !newArticle.content) {
+      toast.error('Заполните все поля');
+      return;
     }
+    const article: Article = { 
+      ...newArticle, 
+      id: Date.now().toString(),
+      date: newArticle.date || new Date().toISOString().split('T')[0]
+    };
+    saveData({ ...data, articles: [...data.articles, article] });
+    setNewArticle({ title: '', content: '', imageUrl: '', date: '' });
+  };
+
+  const deleteArticle = (id: string) => {
+    saveData({ ...data, articles: data.articles.filter(a => a.id !== id) });
+  };
+
+  const addAbout = () => {
+    if (!newAbout.title || !newAbout.description) {
+      toast.error('Заполните все поля');
+      return;
+    }
+    const about: AboutItem = { ...newAbout, id: Date.now().toString() };
+    saveData({ ...data, about: [...data.about, about] });
+    setNewAbout({ title: '', description: '', icon: 'Users' });
+  };
+
+  const deleteAbout = (id: string) => {
+    saveData({ ...data, about: data.about.filter(a => a.id !== id) });
+  };
+
+  const addAdvantage = () => {
+    if (!newAdvantage.title || !newAdvantage.description) {
+      toast.error('Заполните все поля');
+      return;
+    }
+    const advantage: Advantage = { ...newAdvantage, id: Date.now().toString() };
+    saveData({ ...data, advantages: [...data.advantages, advantage] });
+    setNewAdvantage({ title: '', description: '', icon: 'CheckCircle' });
+  };
+
+  const deleteAdvantage = (id: string) => {
+    saveData({ ...data, advantages: data.advantages.filter(a => a.id !== id) });
+  };
+
+  const addPartner = () => {
+    if (!newPartner.name || !newPartner.logoUrl) {
+      toast.error('Заполните все поля');
+      return;
+    }
+    const partner: Partner = { ...newPartner, id: Date.now().toString() };
+    saveData({ ...data, partners: [...data.partners, partner] });
+    setNewPartner({ name: '', logoUrl: '' });
+  };
+
+  const deletePartner = (id: string) => {
+    saveData({ ...data, partners: data.partners.filter(p => p.id !== id) });
+  };
+
+  const updateHero = () => {
+    saveData({ ...data, hero: data.hero });
+  };
+
+  const updateOrderStatus = (orderId: string, status: 'new' | 'processing' | 'completed') => {
+    const updatedOrders = data.orders.map(order => 
+      order.id === orderId ? { ...order, status } : order
+    );
+    saveData({ ...data, orders: updatedOrders });
+  };
+
+  const deleteOrder = (id: string) => {
+    saveData({ ...data, orders: data.orders.filter(o => o.id !== id) });
+  };
+
+  const addCategory = () => {
+    if (!newCategory.name) {
+      toast.error('Введите название категории');
+      return;
+    }
+    const category: Category = { ...newCategory, id: Date.now().toString() };
+    saveData({ ...data, categories: [...data.categories, category] });
+    setNewCategory({ name: '', icon: 'Package' });
+  };
+
+  const deleteCategory = (id: string) => {
+    saveData({ ...data, categories: data.categories.filter(c => c.id !== id) });
+  };
+
+  const addProduct = () => {
+    if (!newProduct.name || !newProduct.price || !newProduct.categoryId) {
+      toast.error('Заполните все обязательные поля');
+      return;
+    }
+    const product: Product = { 
+      ...newProduct, 
+      id: Date.now().toString(),
+      price: parseFloat(newProduct.price)
+    };
+    saveData({ ...data, products: [...data.products, product] });
+    setNewProduct({ name: '', imageUrl: '', price: '', description: '', specs: '', categoryId: '' });
+  };
+
+  const deleteProduct = (id: string) => {
+    saveData({ ...data, products: data.products.filter(p => p.id !== id) });
   };
 
   const handleImportData = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,512 +302,199 @@ const Admin = () => {
 
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
-
-      if (data.services) setServices(data.services);
-      if (data.articles) setArticles(data.articles);
-      if (data.about) setAbout(data.about);
-      if (data.advantages) setAdvantages(data.advantages);
-      if (data.partners) setPartners(data.partners);
-      if (data.hero) setHero(data.hero);
-
-      toast.success('Данные импортированы. Нажмите "Сохранить в базу"!');
+      const imported = JSON.parse(text);
+      saveData({ ...data, ...imported });
+      toast.success('Данные импортированы!');
     } catch (error) {
-      toast.error('Ошибка чтения файла');
+      toast.error('Ошибка импорта данных');
     }
   };
 
   const handleExportData = () => {
-    const dataToExport = {
-      services,
-      articles,
-      about,
-      advantages,
-      partners,
-      hero,
-    };
-
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
-      type: 'application/json',
-    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `admin-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `yasniy-sluh-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await fetch(CATEGORIES_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(categoryForm),
-      });
-
-      if (response.ok) {
-        toast.success('Категория создана');
-        setCategoryForm({ name: '', slug: '', description: '' });
-        loadCategories();
-      } else {
-        toast.error('Ошибка создания категории');
-      }
-    } catch (error) {
-      toast.error('Ошибка создания категории');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await fetch(PRODUCTS_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...productForm,
-          price: parseFloat(productForm.price),
-          category_id: productForm.category_id ? parseInt(productForm.category_id) : null,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success('Товар создан');
-        setProductForm({
-          name: '',
-          slug: '',
-          description: '',
-          price: '',
-          image_url: '',
-          category_id: '',
-          is_service: false,
-        });
-        loadProducts();
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Ошибка создания товара');
-      }
-    } catch (error) {
-      toast.error('Ошибка создания товара');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[^\wа-яё\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  };
-
-  const addService = () => {
-    setServices([...services, { title: '', description: '', price: '', icon: 'Wrench' }]);
-  };
-
-  const updateService = (index: number, field: keyof Service, value: string) => {
-    const updated = [...services];
-    updated[index] = { ...updated[index], [field]: value };
-    setServices(updated);
-  };
-
-  const deleteService = (index: number) => {
-    setServices(services.filter((_, i) => i !== index));
-  };
-
-  const addArticle = () => {
-    setArticles([...articles, { title: '', content: '', image: '', date: new Date().toLocaleDateString('ru-RU') }]);
-  };
-
-  const updateArticle = (index: number, field: keyof Article, value: string) => {
-    const updated = [...articles];
-    updated[index] = { ...updated[index], [field]: value };
-    setArticles(updated);
-  };
-
-  const deleteArticle = (index: number) => {
-    setArticles(articles.filter((_, i) => i !== index));
-  };
-
-  const addAbout = () => {
-    setAbout([...about, { title: '', description: '', icon: 'Info' }]);
-  };
-
-  const updateAbout = (index: number, field: keyof AboutItem, value: string) => {
-    const updated = [...about];
-    updated[index] = { ...updated[index], [field]: value };
-    setAbout(updated);
-  };
-
-  const deleteAbout = (index: number) => {
-    setAbout(about.filter((_, i) => i !== index));
-  };
-
-  const addAdvantage = () => {
-    setAdvantages([...advantages, { title: '', description: '', icon: 'Star' }]);
-  };
-
-  const updateAdvantage = (index: number, field: keyof Advantage, value: string) => {
-    const updated = [...advantages];
-    updated[index] = { ...updated[index], [field]: value };
-    setAdvantages(updated);
-  };
-
-  const deleteAdvantage = (index: number) => {
-    setAdvantages(advantages.filter((_, i) => i !== index));
-  };
-
-  const addPartner = () => {
-    setPartners([...partners, { name: '', logo: '' }]);
-  };
-
-  const updatePartner = (index: number, field: keyof Partner, value: string) => {
-    const updated = [...partners];
-    updated[index] = { ...updated[index], [field]: value };
-    setPartners(updated);
-  };
-
-  const deletePartner = (index: number) => {
-    setPartners(partners.filter((_, i) => i !== index));
-  };
-
-  const updateOrderStatus = async (orderId: number, status: string) => {
-    try {
-      const response = await fetch(`${DATA_MANAGER_API}?type=orders`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status }),
-      });
-
-      if (response.ok) {
-        toast.success('Статус заказа обновлен');
-        await loadAllData();
-      } else {
-        toast.error('Ошибка обновления статуса');
-      }
-    } catch (error) {
-      toast.error('Ошибка обновления статуса');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b sticky top-0 bg-background z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <h1 className="text-2xl font-bold">Админ-панель</h1>
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={() => window.location.href = '/'}>
-                <Icon name="Home" className="mr-2 h-4 w-4" />
-                На главную
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExportData}>
-                <Icon name="Download" className="mr-2 h-4 w-4" />
-                Экспорт
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <label>
-                  <Icon name="Upload" className="mr-2 h-4 w-4" />
-                  Импорт
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportData}
-                    className="hidden"
-                  />
-                </label>
-              </Button>
-              <Button onClick={handleSaveAll} disabled={saving} size="lg" className="font-bold">
-                <Icon name="Save" className="mr-2 h-5 w-5" />
-                {saving ? 'Сохранение...' : 'СОХРАНИТЬ В БАЗУ'}
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Панель администратора</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/')}>
+              <Icon name="Home" size={18} className="mr-2" />
+              На сайт
+            </Button>
+            <Button variant="outline" onClick={handleExportData}>
+              <Icon name="Download" size={18} className="mr-2" />
+              Экспорт
+            </Button>
+            <Button variant="outline" asChild>
+              <label>
+                <Icon name="Upload" size={18} className="mr-2" />
+                Импорт
+                <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
+              </label>
+            </Button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="catalog" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-8 mb-8">
-            <TabsTrigger value="catalog">Каталог</TabsTrigger>
+        <Tabs defaultValue="hero" className="w-full">
+          <TabsList className="grid grid-cols-9 w-full">
             <TabsTrigger value="hero">Главная</TabsTrigger>
+            <TabsTrigger value="categories">Категории</TabsTrigger>
+            <TabsTrigger value="products">Товары</TabsTrigger>
             <TabsTrigger value="services">Услуги</TabsTrigger>
+            <TabsTrigger value="about">О нас</TabsTrigger>
             <TabsTrigger value="articles">Статьи</TabsTrigger>
-            <TabsTrigger value="about">О компании</TabsTrigger>
             <TabsTrigger value="advantages">Преимущества</TabsTrigger>
             <TabsTrigger value="partners">Партнеры</TabsTrigger>
-            <TabsTrigger value="orders">Заказы ({orders.length})</TabsTrigger>
+            <TabsTrigger value="orders">Заказы</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="catalog">
-            <div className="grid gap-8 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Создать категорию</CardTitle>
-                  <CardDescription>Добавьте новую категорию товаров</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleCreateCategory} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cat-name">Название</Label>
-                      <Input
-                        id="cat-name"
-                        placeholder="Слуховые аппараты"
-                        value={categoryForm.name}
-                        onChange={(e) => {
-                          const name = e.target.value;
-                          setCategoryForm({
-                            ...categoryForm,
-                            name,
-                            slug: generateSlug(name),
-                          });
-                        }}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cat-slug">Slug (URL)</Label>
-                      <Input
-                        id="cat-slug"
-                        placeholder="hearing-aids"
-                        value={categoryForm.slug}
-                        onChange={(e) =>
-                          setCategoryForm({ ...categoryForm, slug: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cat-desc">Описание</Label>
-                      <Textarea
-                        id="cat-desc"
-                        placeholder="Современные слуховые аппараты"
-                        value={categoryForm.description}
-                        onChange={(e) =>
-                          setCategoryForm({ ...categoryForm, description: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <Button type="submit" disabled={loading} className="w-full">
-                      <Icon name="Plus" className="mr-2 h-4 w-4" />
-                      Создать категорию
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Создать товар/услугу</CardTitle>
-                  <CardDescription>Добавьте новый товар или услугу</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleCreateProduct} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="prod-name">Название</Label>
-                      <Input
-                        id="prod-name"
-                        placeholder="Слуховой аппарат Signia"
-                        value={productForm.name}
-                        onChange={(e) => {
-                          const name = e.target.value;
-                          setProductForm({
-                            ...productForm,
-                            name,
-                            slug: generateSlug(name),
-                          });
-                        }}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="prod-slug">Slug (URL)</Label>
-                      <Input
-                        id="prod-slug"
-                        placeholder="signia-hearing-aid"
-                        value={productForm.slug}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, slug: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="prod-desc">Описание</Label>
-                      <Textarea
-                        id="prod-desc"
-                        placeholder="Описание товара"
-                        value={productForm.description}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, description: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="prod-price">Цена (₽)</Label>
-                      <Input
-                        id="prod-price"
-                        type="number"
-                        placeholder="25000"
-                        value={productForm.price}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, price: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="prod-image">URL изображения</Label>
-                      <Input
-                        id="prod-image"
-                        placeholder="https://example.com/image.jpg"
-                        value={productForm.image_url}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, image_url: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="prod-category">Категория</Label>
-                      <select
-                        id="prod-category"
-                        value={productForm.category_id}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, category_id: e.target.value })
-                        }
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                      >
-                        <option value="">Выберите категорию</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id.toString()}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <input
-                        id="prod-service"
-                        type="checkbox"
-                        checked={productForm.is_service}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, is_service: e.target.checked })
-                        }
-                        className="h-4 w-4"
-                      />
-                      <Label htmlFor="prod-service" className="text-sm font-normal">
-                        Это услуга
-                      </Label>
-                    </div>
-
-                    <Button type="submit" disabled={loading} className="w-full">
-                      <Icon name="Plus" className="mr-2 h-4 w-4" />
-                      Создать товар
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="mt-8 space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Существующие категории ({categories.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {categories.map((cat) => (
-                      <div key={cat.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{cat.name}</p>
-                          <p className="text-sm text-muted-foreground">{cat.slug}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Существующие товары ({products.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {products.map((prod) => (
-                      <div key={prod.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium">{prod.name}</p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>{prod.price} ₽</span>
-                            {prod.category_name && <span>• {prod.category_name}</span>}
-                            {prod.is_service && <span>• Услуга</span>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
 
           <TabsContent value="hero">
             <Card>
               <CardHeader>
                 <CardTitle>Главный экран</CardTitle>
-                <CardDescription>Редактировать текст на главном экране</CardDescription>
+                <CardDescription>Настройка главного баннера сайта</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <div>
                   <Label>Заголовок</Label>
-                  <Input
-                    value={hero.title}
-                    onChange={(e) => setHero({ ...hero, title: e.target.value })}
-                    placeholder="ОТКРОЙТЕ ДЛЯ СЕБЯ"
+                  <Input 
+                    value={data.hero.title} 
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, title: e.target.value } })}
                   />
                 </div>
-                <div className="space-y-2">
+                <div>
                   <Label>Выделенный текст</Label>
-                  <Input
-                    value={hero.highlightedText}
-                    onChange={(e) => setHero({ ...hero, highlightedText: e.target.value })}
-                    placeholder="МИР ЧЕТКОГО ЗВУКА"
+                  <Input 
+                    value={data.hero.highlightedText} 
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, highlightedText: e.target.value } })}
                   />
                 </div>
-                <div className="space-y-2">
+                <div>
                   <Label>Подзаголовок</Label>
-                  <Input
-                    value={hero.subtitle}
-                    onChange={(e) => setHero({ ...hero, subtitle: e.target.value })}
-                    placeholder="С НАШИМИ РЕШЕНИЯМИ!"
+                  <Input 
+                    value={data.hero.subtitle} 
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, subtitle: e.target.value } })}
                   />
                 </div>
-                <div className="space-y-2">
+                <div>
                   <Label>Описание</Label>
-                  <Textarea
-                    value={hero.description}
-                    onChange={(e) => setHero({ ...hero, description: e.target.value })}
-                    placeholder="Инновационные слуховые технологии..."
+                  <Textarea 
+                    value={data.hero.description} 
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, description: e.target.value } })}
                   />
+                </div>
+                <Button onClick={updateHero}>Сохранить</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <Card>
+              <CardHeader>
+                <CardTitle>Управление категориями</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <Input 
+                    placeholder="Название" 
+                    value={newCategory.name}
+                    onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="Иконка (lucide)" 
+                    value={newCategory.icon}
+                    onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
+                  />
+                  <Button onClick={addCategory}>Добавить</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.categories.map(cat => (
+                    <div key={cat.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div className="flex items-center gap-2">
+                        <Icon name={cat.icon as any} size={20} />
+                        <span>{cat.name}</span>
+                      </div>
+                      <Button variant="destructive" size="sm" onClick={() => deleteCategory(cat.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="products">
+            <Card>
+              <CardHeader>
+                <CardTitle>Управление товарами</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Название" 
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="Цена" 
+                    type="number"
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="URL изображения" 
+                    value={newProduct.imageUrl}
+                    onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
+                  />
+                  <select 
+                    className="border rounded px-3 py-2"
+                    value={newProduct.categoryId}
+                    onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+                  >
+                    <option value="">Выберите категорию</option>
+                    {data.categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <Textarea 
+                    placeholder="Описание"
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                    className="col-span-2"
+                  />
+                  <Textarea 
+                    placeholder="Характеристики"
+                    value={newProduct.specs}
+                    onChange={(e) => setNewProduct({ ...newProduct, specs: e.target.value })}
+                    className="col-span-2"
+                  />
+                  <Button onClick={addProduct} className="col-span-2">Добавить товар</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.products.map(prod => (
+                    <div key={prod.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div className="flex items-center gap-3">
+                        {prod.imageUrl && <img src={prod.imageUrl} alt={prod.name} className="w-12 h-12 object-cover rounded" />}
+                        <div>
+                          <div className="font-semibold">{prod.name}</div>
+                          <div className="text-sm text-gray-500">{prod.price} ₽</div>
+                        </div>
+                      </div>
+                      <Button variant="destructive" size="sm" onClick={() => deleteProduct(prod.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -730,102 +503,46 @@ const Admin = () => {
           <TabsContent value="services">
             <Card>
               <CardHeader>
-                <CardTitle>Услуги ({services.length})</CardTitle>
-                <CardDescription>Управление услугами</CardDescription>
+                <CardTitle>Управление услугами</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {services.map((service, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Label>Услуга #{index + 1}</Label>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteService(index)}
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Название" 
+                    value={newService.title}
+                    onChange={(e) => setNewService({ ...newService, title: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="Цена" 
+                    value={newService.price}
+                    onChange={(e) => setNewService({ ...newService, price: e.target.value })}
+                  />
+                  <Textarea 
+                    placeholder="Описание"
+                    value={newService.description}
+                    onChange={(e) => setNewService({ ...newService, description: e.target.value })}
+                    className="col-span-2"
+                  />
+                  <Input 
+                    placeholder="Иконка (lucide)"
+                    value={newService.icon}
+                    onChange={(e) => setNewService({ ...newService, icon: e.target.value })}
+                  />
+                  <Button onClick={addService}>Добавить</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.services.map(service => (
+                    <div key={service.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div>
+                        <div className="font-semibold">{service.title}</div>
+                        <div className="text-sm text-gray-500">{service.price}</div>
                       </div>
-                      <Input
-                        placeholder="Название"
-                        value={service.title}
-                        onChange={(e) => updateService(index, 'title', e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Описание"
-                        value={service.description}
-                        onChange={(e) => updateService(index, 'description', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Цена"
-                        value={service.price}
-                        onChange={(e) => updateService(index, 'price', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Иконка (lucide icon name)"
-                        value={service.icon}
-                        onChange={(e) => updateService(index, 'icon', e.target.value)}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-                <Button onClick={addService} className="w-full">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить услугу
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="articles">
-            <Card>
-              <CardHeader>
-                <CardTitle>Статьи ({articles.length})</CardTitle>
-                <CardDescription>Управление статьями</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {articles.map((article, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Label>Статья #{index + 1}</Label>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteArticle(index)}
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Input
-                        placeholder="Заголовок"
-                        value={article.title}
-                        onChange={(e) => updateArticle(index, 'title', e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Содержание"
-                        value={article.content}
-                        onChange={(e) => updateArticle(index, 'content', e.target.value)}
-                        rows={4}
-                      />
-                      <Input
-                        placeholder="URL изображения"
-                        value={article.image}
-                        onChange={(e) => updateArticle(index, 'image', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Дата"
-                        value={article.date}
-                        onChange={(e) => updateArticle(index, 'date', e.target.value)}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-                <Button onClick={addArticle} className="w-full">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить статью
-                </Button>
+                      <Button variant="destructive" size="sm" onClick={() => deleteService(service.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -833,45 +550,88 @@ const Admin = () => {
           <TabsContent value="about">
             <Card>
               <CardHeader>
-                <CardTitle>О компании ({about.length})</CardTitle>
-                <CardDescription>Управление блоками о компании</CardDescription>
+                <CardTitle>О компании</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {about.map((item, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Label>Блок #{index + 1}</Label>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteAbout(index)}
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Заголовок" 
+                    value={newAbout.title}
+                    onChange={(e) => setNewAbout({ ...newAbout, title: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="Иконка (lucide)"
+                    value={newAbout.icon}
+                    onChange={(e) => setNewAbout({ ...newAbout, icon: e.target.value })}
+                  />
+                  <Textarea 
+                    placeholder="Описание"
+                    value={newAbout.description}
+                    onChange={(e) => setNewAbout({ ...newAbout, description: e.target.value })}
+                    className="col-span-2"
+                  />
+                  <Button onClick={addAbout} className="col-span-2">Добавить</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.about.map(item => (
+                    <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div>
+                        <div className="font-semibold">{item.title}</div>
+                        <div className="text-sm text-gray-500">{item.description}</div>
                       </div>
-                      <Input
-                        placeholder="Заголовок"
-                        value={item.title}
-                        onChange={(e) => updateAbout(index, 'title', e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Описание"
-                        value={item.description}
-                        onChange={(e) => updateAbout(index, 'description', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Иконка"
-                        value={item.icon}
-                        onChange={(e) => updateAbout(index, 'icon', e.target.value)}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-                <Button onClick={addAbout} className="w-full">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить блок
-                </Button>
+                      <Button variant="destructive" size="sm" onClick={() => deleteAbout(item.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="articles">
+            <Card>
+              <CardHeader>
+                <CardTitle>Управление статьями</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Заголовок" 
+                    value={newArticle.title}
+                    onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="URL изображения"
+                    value={newArticle.imageUrl}
+                    onChange={(e) => setNewArticle({ ...newArticle, imageUrl: e.target.value })}
+                  />
+                  <Textarea 
+                    placeholder="Содержание"
+                    value={newArticle.content}
+                    onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
+                    className="col-span-2"
+                  />
+                  <Input 
+                    type="date"
+                    value={newArticle.date}
+                    onChange={(e) => setNewArticle({ ...newArticle, date: e.target.value })}
+                  />
+                  <Button onClick={addArticle}>Добавить</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.articles.map(article => (
+                    <div key={article.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div>
+                        <div className="font-semibold">{article.title}</div>
+                        <div className="text-sm text-gray-500">{article.date}</div>
+                      </div>
+                      <Button variant="destructive" size="sm" onClick={() => deleteArticle(article.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -879,45 +639,41 @@ const Admin = () => {
           <TabsContent value="advantages">
             <Card>
               <CardHeader>
-                <CardTitle>Преимущества ({advantages.length})</CardTitle>
-                <CardDescription>Управление преимуществами</CardDescription>
+                <CardTitle>Преимущества</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {advantages.map((item, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Label>Преимущество #{index + 1}</Label>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteAdvantage(index)}
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Заголовок" 
+                    value={newAdvantage.title}
+                    onChange={(e) => setNewAdvantage({ ...newAdvantage, title: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="Иконка (lucide)"
+                    value={newAdvantage.icon}
+                    onChange={(e) => setNewAdvantage({ ...newAdvantage, icon: e.target.value })}
+                  />
+                  <Textarea 
+                    placeholder="Описание"
+                    value={newAdvantage.description}
+                    onChange={(e) => setNewAdvantage({ ...newAdvantage, description: e.target.value })}
+                    className="col-span-2"
+                  />
+                  <Button onClick={addAdvantage} className="col-span-2">Добавить</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.advantages.map(adv => (
+                    <div key={adv.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div>
+                        <div className="font-semibold">{adv.title}</div>
+                        <div className="text-sm text-gray-500">{adv.description}</div>
                       </div>
-                      <Input
-                        placeholder="Заголовок"
-                        value={item.title}
-                        onChange={(e) => updateAdvantage(index, 'title', e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Описание"
-                        value={item.description}
-                        onChange={(e) => updateAdvantage(index, 'description', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Иконка"
-                        value={item.icon}
-                        onChange={(e) => updateAdvantage(index, 'icon', e.target.value)}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-                <Button onClick={addAdvantage} className="w-full">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить преимущество
-                </Button>
+                      <Button variant="destructive" size="sm" onClick={() => deleteAdvantage(adv.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -925,40 +681,35 @@ const Admin = () => {
           <TabsContent value="partners">
             <Card>
               <CardHeader>
-                <CardTitle>Партнеры ({partners.length})</CardTitle>
-                <CardDescription>Управление партнерами</CardDescription>
+                <CardTitle>Партнеры</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {partners.map((item, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Label>Партнер #{index + 1}</Label>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deletePartner(index)}
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
+                <div className="grid grid-cols-3 gap-4">
+                  <Input 
+                    placeholder="Название" 
+                    value={newPartner.name}
+                    onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })}
+                  />
+                  <Input 
+                    placeholder="URL логотипа"
+                    value={newPartner.logoUrl}
+                    onChange={(e) => setNewPartner({ ...newPartner, logoUrl: e.target.value })}
+                  />
+                  <Button onClick={addPartner}>Добавить</Button>
+                </div>
+                <div className="space-y-2">
+                  {data.partners.map(partner => (
+                    <div key={partner.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div className="flex items-center gap-3">
+                        <img src={partner.logoUrl} alt={partner.name} className="h-8" />
+                        <span>{partner.name}</span>
                       </div>
-                      <Input
-                        placeholder="Название"
-                        value={item.name}
-                        onChange={(e) => updatePartner(index, 'name', e.target.value)}
-                      />
-                      <Input
-                        placeholder="URL логотипа"
-                        value={item.logo}
-                        onChange={(e) => updatePartner(index, 'logo', e.target.value)}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-                <Button onClick={addPartner} className="w-full">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить партнера
-                </Button>
+                      <Button variant="destructive" size="sm" onClick={() => deletePartner(partner.id)}>
+                        Удалить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -966,78 +717,63 @@ const Admin = () => {
           <TabsContent value="orders">
             <Card>
               <CardHeader>
-                <CardTitle>Заказы ({orders.length})</CardTitle>
-                <CardDescription>Управление заказами с сайта</CardDescription>
+                <CardTitle>Заказы</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {orders.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">Заказов пока нет</p>
-                ) : (
-                  orders.map((order) => (
-                    <Card key={order.id}>
-                      <CardContent className="pt-6">
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-bold text-lg">{order.customer_name}</p>
-                              <p className="text-sm text-muted-foreground">{order.customer_phone}</p>
-                              {order.customer_email && (
-                                <p className="text-sm text-muted-foreground">{order.customer_email}</p>
-                              )}
+              <CardContent>
+                <div className="space-y-4">
+                  {data.orders.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">Заказов пока нет</div>
+                  ) : (
+                    data.orders.map(order => (
+                      <Card key={order.id}>
+                        <CardHeader>
+                          <CardTitle className="flex justify-between items-center">
+                            <span>Заказ #{order.id}</span>
+                            <div className="flex gap-2">
+                              <select 
+                                value={order.status}
+                                onChange={(e) => updateOrderStatus(order.id, e.target.value as any)}
+                                className="border rounded px-2 py-1 text-sm"
+                              >
+                                <option value="new">Новый</option>
+                                <option value="processing">В обработке</option>
+                                <option value="completed">Завершен</option>
+                              </select>
+                              <Button variant="destructive" size="sm" onClick={() => deleteOrder(order.id)}>
+                                Удалить
+                              </Button>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">{order.total_amount}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(order.created_at).toLocaleString('ru-RU')}
-                              </p>
+                          </CardTitle>
+                          <CardDescription>
+                            {order.date} • {order.total} ₽
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div><strong>Клиент:</strong> {order.customer.firstName} {order.customer.lastName}</div>
+                            <div><strong>Телефон:</strong> {order.customer.phone}</div>
+                            <div><strong>Email:</strong> {order.customer.email}</div>
+                            <div><strong>Адрес:</strong> {order.customer.address}</div>
+                            {order.customer.comment && <div><strong>Комментарий:</strong> {order.customer.comment}</div>}
+                            <div className="mt-4">
+                              <strong>Товары:</strong>
+                              <ul className="list-disc list-inside">
+                                {order.items.map((item, idx) => (
+                                  <li key={idx}>{item.product.name} × {item.quantity}</li>
+                                ))}
+                              </ul>
                             </div>
                           </div>
-                          
-                          <div className="border-t pt-3">
-                            <Label className="text-xs">Товары:</Label>
-                            {(() => {
-                              const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-                              return items.map((item: any, idx: number) => (
-                                <div key={idx} className="text-sm mt-1">
-                                  • {item.name} x{item.quantity} - {item.price}
-                                </div>
-                              ));
-                            })()}
-                          </div>
-
-                          <div className="flex gap-2 pt-2">
-                            <Button
-                              size="sm"
-                              variant={order.status === 'new' ? 'default' : 'outline'}
-                              onClick={() => updateOrderStatus(order.id, 'new')}
-                            >
-                              Новый
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={order.status === 'processing' ? 'default' : 'outline'}
-                              onClick={() => updateOrderStatus(order.id, 'processing')}
-                            >
-                              В работе
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={order.status === 'completed' ? 'default' : 'outline'}
-                              onClick={() => updateOrderStatus(order.id, 'completed')}
-                            >
-                              Выполнен
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
     </div>
   );
 };

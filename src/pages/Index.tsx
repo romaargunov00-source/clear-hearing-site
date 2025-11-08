@@ -588,7 +588,7 @@ const Index = () => {
                   <Icon name="Grid" className="mr-2" size={18} />
                   Все категории
                 </Button>
-                {data.categories?.filter(cat => cat).map((category) => (
+                {data.categories.map((category) => (
                   <Button
                     key={category.id}
                     onClick={() => setSelectedCategoryId(category.id)}
@@ -1222,7 +1222,7 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
   };
 
   const updateCategory = (id: string, field: keyof Category, value: string) => {
-    const updated = data.categories?.filter(cat => cat).map(c => c.id === id ? { ...c, [field]: value } : c);
+    const updated = data.categories.map(c => c.id === id ? { ...c, [field]: value } : c);
     onSave({ ...data, categories: updated });
   };
 
@@ -1475,7 +1475,7 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
             Добавить категорию
           </Button>
         </div>
-        {data.categories?.filter(cat => cat).map((category) => (
+        {data.categories.map((category) => (
           <Card key={category.id} className="border-2">
             <CardContent className="pt-6 space-y-3">
               <div>
@@ -1516,7 +1516,7 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
                   className="w-full h-10 px-3 rounded-md border border-input bg-background"
                 >
                   <option value="">Без категории</option>
-                  {data.categories?.map((cat) => cat && (
+                  {data.categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>

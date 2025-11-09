@@ -158,6 +158,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     (hero.get('title'), hero.get('highlightedText'), hero.get('subtitle'), hero.get('description'), hero.get('imageUrl'))
                 )
             
+            if 'categories' in body_data:
+                cur.execute('DELETE FROM categories')
+                for category in body_data['categories']:
+                    cur.execute(
+                        'INSERT INTO categories (name, icon) VALUES (%s, %s)',
+                        (category.get('name'), category.get('icon'))
+                    )
+            
+            if 'products' in body_data:
+                cur.execute('DELETE FROM products')
+                for product in body_data['products']:
+                    cur.execute(
+                        'INSERT INTO products (name, image_url, price, description, specs, category_id) VALUES (%s, %s, %s, %s, %s, %s)',
+                        (product.get('name'), product.get('imageUrl'), product.get('price'), product.get('description'), product.get('specs'), product.get('categoryId'))
+                    )
+            
             conn.commit()
             cur.close()
             conn.close()

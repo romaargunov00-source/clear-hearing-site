@@ -264,39 +264,18 @@ const Index = () => {
       };
 
       setData(newData);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
       
     } catch (error) {
-      console.error('Failed to load data from API, using localStorage', error);
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setData({
-            categories: parsed.categories || defaultCategories,
-            products: parsed.products || [],
-            services: parsed.services || [],
-            about: parsed.about || [],
-            articles: parsed.articles || [],
-            advantages: parsed.advantages || defaultAdvantages,
-            partners: parsed.partners || defaultPartners,
-            hero: parsed.hero || {
-              title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
-              highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
-              subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
-              description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
-            },
-            orders: parsed.orders || []
-          });
-        } catch (e) {
-          console.error('Failed to parse stored data', e);
-        }
-      }
+      console.error('Failed to load data from API', error);
+      toast({ 
+        title: 'Ошибка загрузки', 
+        description: 'Не удалось загрузить данные из базы данных', 
+        variant: 'destructive' 
+      });
     }
   };
 
   const saveData = (newData: AppData) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
     setData(newData);
   };
 
@@ -415,7 +394,8 @@ const Index = () => {
         ...data,
         orders: [...data.orders, newOrder]
       };
-      saveData(updatedData);
+      setData(updatedData);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
       
       setOrderProcessing(false);
       setOrderSuccess(true);
@@ -1318,6 +1298,18 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          categories: data.categories.map(c => ({
+            name: c.name,
+            icon: c.icon
+          })),
+          products: data.products.map(p => ({
+            name: p.name,
+            imageUrl: p.imageUrl,
+            price: p.price,
+            description: p.description,
+            specs: p.specs,
+            categoryId: p.categoryId
+          })),
           services: data.services.map(s => ({
             name: s.name,
             imageUrl: s.imageUrl,
@@ -1358,7 +1350,8 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
         throw new Error('Failed to save to database');
       }
 
-      toast({ title: 'Успешно сохранено!', description: 'Все изменения сохранены в базу данных' });
+      await loadData();
+      toast({ title: 'Успешно сохранено!', description: 'Все изменения сохранены в базу данных для всех пользователей' });
     } catch (error) {
       console.error('Failed to save to database:', error);
       toast({ title: 'Ошибка', description: 'Не удалось сохранить в базу данных', variant: 'destructive' });

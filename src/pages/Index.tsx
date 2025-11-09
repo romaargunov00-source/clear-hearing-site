@@ -962,9 +962,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-primary/20 mt-6 md:mt-8 pt-4 md:pt-6 text-center">
-            <p className="text-xs md:text-sm text-muted-foreground">
-              © 2025 Ясный слух. Все права защищены
-            </p>
+            <p className="text-xs md:text-sm text-muted-foreground">© 2025 Ясный слух. Все права защищены. Разработал: @skzry</p>
           </div>
         </div>
       </footer>

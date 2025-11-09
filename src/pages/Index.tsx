@@ -380,22 +380,33 @@ const Index = () => {
 
     setOrderProcessing(true);
     
-    setTimeout(() => {
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        items: [...cart],
+    try {
+      const orderPayload = {
+        items: cart.map(item => ({
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            price: item.product.price,
+            imageUrl: item.product.imageUrl
+          },
+          quantity: item.quantity
+        })),
         total: getTotalPrice(),
         customer: { ...orderForm },
-        date: new Date().toLocaleString('ru-RU'),
         status: 'new'
       };
-      
-      const updatedData = {
-        ...data,
-        orders: [...data.orders, newOrder]
-      };
-      setData(updatedData);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+
+      const response = await fetch('https://functions.poehali.dev/53f4f863-66fb-4201-bc3a-49119b5b8e92?type=order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Не удалось сохранить заказ');
+      }
+
+      await loadData();
       
       setOrderProcessing(false);
       setOrderSuccess(true);
@@ -414,8 +425,16 @@ const Index = () => {
           comment: ''
         });
         toast({ title: 'Заказ оформлен!', description: 'Скоро с вами свяжется наш менеджер' });
-      }, 3000);
-    }, 3000);
+      }, 2000);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setOrderProcessing(false);
+      toast({ 
+        title: 'Ошибка', 
+        description: 'Не удалось оформить заказ. Попробуйте ещё раз.', 
+        variant: 'destructive' 
+      });
+    }
   };
 
   const handleAdminLogin = () => {

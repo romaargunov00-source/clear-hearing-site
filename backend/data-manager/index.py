@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict, Any
 import psycopg2
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictCursor, Json
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -109,7 +109,39 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     elif method == 'POST':
         body_data = json.loads(event.get('body', '{}'))
         
-        if data_type == 'bulk':
+        if data_type == 'order':
+            cur.execute(
+                '''INSERT INTO orders 
+                (items, total, customer_first_name, customer_last_name, customer_phone, 
+                customer_email, customer_address, customer_comment, status) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *''',
+                (
+                    Json(body_data.get('items', [])),
+                    body_data.get('total'),
+                    body_data.get('customer', {}).get('firstName'),
+                    body_data.get('customer', {}).get('lastName'),
+                    body_data.get('customer', {}).get('phone'),
+                    body_data.get('customer', {}).get('email'),
+                    body_data.get('customer', {}).get('address'),
+                    body_data.get('customer', {}).get('comment'),
+                    body_data.get('status', 'new')
+                )
+            )
+            order = cur.fetchone()
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(order, default=str)
+            }
+        
+        elif data_type == 'bulk':
             if 'services' in body_data:
                 cur.execute('DELETE FROM services')
                 for service in body_data['services']:

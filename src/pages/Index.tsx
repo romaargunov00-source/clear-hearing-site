@@ -175,21 +175,27 @@ const Index = () => {
 
   const loadData = async () => {
     try {
-      const allDataRes = await fetch('https://functions.poehali.dev/53f4f863-66fb-4201-bc3a-49119b5b8e92?type=all');
+      const [categoriesRes, productsRes, allDataRes] = await Promise.all([
+        fetch('https://functions.poehali.dev/7dcdd31e-3afc-4dd1-8b1e-3ddb3a43c1e2'),
+        fetch('https://functions.poehali.dev/e7fdbb37-3c51-41af-84f1-84aa0402a944'),
+        fetch('https://functions.poehali.dev/53f4f863-66fb-4201-bc3a-49119b5b8e92?type=all')
+      ]);
 
-      if (!allDataRes.ok) {
+      if (!categoriesRes.ok || !productsRes.ok || !allDataRes.ok) {
         throw new Error('Failed to load data from API');
       }
 
+      const categoriesData = await categoriesRes.json();
+      const productsData = await productsRes.json();
       const dbData = await allDataRes.json();
 
       const newData = {
-        categories: dbData.categories.length > 0 ? dbData.categories.map((c: any) => ({
+        categories: categoriesData.length > 0 ? categoriesData.map((c: any) => ({
           id: c.id.toString(),
           name: c.name,
           icon: c.icon
         })) : defaultCategories,
-        products: dbData.products.map((p: any) => ({
+        products: productsData.map((p: any) => ({
           id: p.id.toString(),
           name: p.name,
           imageUrl: p.image_url || '',

@@ -134,23 +134,28 @@ const Admin = () => {
   const [newAdvantage, setNewAdvantage] = useState({ title: '', description: '', icon: 'CheckCircle' });
   const [newPartner, setNewPartner] = useState({ name: '', logoUrl: '' });
   const [newCategory, setNewCategory] = useState({ name: '', icon: 'Package' });
-  const [newProduct, setNewProduct] = useState({ 
-    name: '', 
-    imageUrl: '', 
-    price: '', 
-    description: '', 
-    specs: '', 
-    categoryId: '' 
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    imageUrl: '',
+    price: '',
+    description: '',
+    specs: '',
+    categoryId: ''
   });
 
   useEffect(() => {
+    const token = sessionStorage.getItem('admin_token');
+    if (!token) {
+      navigate('/admin/login');
+      return;
+    }
     loadData();
-  }, []);
+  }, [navigate]);
 
   const loadData = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
         const parsed = JSON.parse(stored);
         setData({
           services: parsed.services || [],
@@ -163,9 +168,10 @@ const Admin = () => {
           categories: parsed.categories || [],
           products: parsed.products || [],
         });
-      } catch (e) {
-        console.error('Failed to parse data', e);
       }
+    } catch (e) {
+      console.error('Failed to load data', e);
+      toast.error('Ошибка загрузки данных');
     }
   };
 

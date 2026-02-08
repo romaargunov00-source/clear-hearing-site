@@ -181,125 +181,296 @@ const Admin = () => {
     toast.success('Данные сохранены!');
   };
 
-  const addService = () => {
+  const addService = async () => {
     if (!newService.title || !newService.description) {
       toast.error('Заполните все поля');
       return;
     }
-    const service: Service = { ...newService, id: Date.now().toString() };
-    saveData({ ...data, services: [...data.services, service] });
-    setNewService({ title: '', description: '', price: '', icon: 'Wrench' });
+    try {
+      const { data: service, error } = await supabase.from('services').insert([newService]).select();
+      if (error) throw error;
+      if (service) {
+        setData({ ...data, services: [...data.services, service[0]] });
+        setNewService({ title: '', description: '', price: '', icon: 'Wrench' });
+        toast.success('Услуга добавлена!');
+      }
+    } catch (e) {
+      console.error('Error adding service', e);
+      toast.error('Ошибка добавления услуги');
+    }
   };
 
-  const deleteService = (id: string) => {
-    saveData({ ...data, services: data.services.filter(s => s.id !== id) });
+  const deleteService = async (id: string) => {
+    try {
+      const { error } = await supabase.from('services').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, services: data.services.filter(s => s.id !== id) });
+      toast.success('Услуга удалена!');
+    } catch (e) {
+      console.error('Error deleting service', e);
+      toast.error('Ошибка удаления услуги');
+    }
   };
 
-  const addArticle = () => {
+  const addArticle = async () => {
     if (!newArticle.title || !newArticle.content) {
       toast.error('Заполните все поля');
       return;
     }
-    const article: Article = { 
-      ...newArticle, 
-      id: Date.now().toString(),
-      date: newArticle.date || new Date().toISOString().split('T')[0]
-    };
-    saveData({ ...data, articles: [...data.articles, article] });
-    setNewArticle({ title: '', content: '', imageUrl: '', date: '' });
+    try {
+      const article = {
+        title: newArticle.title,
+        content: newArticle.content,
+        image_url: newArticle.imageUrl,
+        date: newArticle.date || new Date().toISOString().split('T')[0]
+      };
+      const { data: result, error } = await supabase.from('articles').insert([article]).select();
+      if (error) throw error;
+      if (result) {
+        const mapped = {
+          ...result[0],
+          imageUrl: result[0].image_url
+        };
+        setData({ ...data, articles: [...data.articles, mapped] });
+        setNewArticle({ title: '', content: '', imageUrl: '', date: '' });
+        toast.success('Статья добавлена!');
+      }
+    } catch (e) {
+      console.error('Error adding article', e);
+      toast.error('Ошибка добавления статьи');
+    }
   };
 
-  const deleteArticle = (id: string) => {
-    saveData({ ...data, articles: data.articles.filter(a => a.id !== id) });
+  const deleteArticle = async (id: string) => {
+    try {
+      const { error } = await supabase.from('articles').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, articles: data.articles.filter(a => a.id !== id) });
+      toast.success('Статья удалена!');
+    } catch (e) {
+      console.error('Error deleting article', e);
+      toast.error('Ошибка удаления статьи');
+    }
   };
 
-  const addAbout = () => {
+  const addAbout = async () => {
     if (!newAbout.title || !newAbout.description) {
       toast.error('Заполните все поля');
       return;
     }
-    const about: AboutItem = { ...newAbout, id: Date.now().toString() };
-    saveData({ ...data, about: [...data.about, about] });
-    setNewAbout({ title: '', description: '', icon: 'Users' });
+    try {
+      const { data: result, error } = await supabase.from('about_items').insert([newAbout]).select();
+      if (error) throw error;
+      if (result) {
+        setData({ ...data, about: [...data.about, result[0]] });
+        setNewAbout({ title: '', description: '', icon: 'Users' });
+        toast.success('Пункт добавлен!');
+      }
+    } catch (e) {
+      console.error('Error adding about item', e);
+      toast.error('Ошибка добавления пункта');
+    }
   };
 
-  const deleteAbout = (id: string) => {
-    saveData({ ...data, about: data.about.filter(a => a.id !== id) });
+  const deleteAbout = async (id: string) => {
+    try {
+      const { error } = await supabase.from('about_items').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, about: data.about.filter(a => a.id !== id) });
+      toast.success('Пункт удален!');
+    } catch (e) {
+      console.error('Error deleting about item', e);
+      toast.error('Ошибка удаления пункта');
+    }
   };
 
-  const addAdvantage = () => {
+  const addAdvantage = async () => {
     if (!newAdvantage.title || !newAdvantage.description) {
       toast.error('Заполните все поля');
       return;
     }
-    const advantage: Advantage = { ...newAdvantage, id: Date.now().toString() };
-    saveData({ ...data, advantages: [...data.advantages, advantage] });
-    setNewAdvantage({ title: '', description: '', icon: 'CheckCircle' });
+    try {
+      const { data: result, error } = await supabase.from('advantages').insert([newAdvantage]).select();
+      if (error) throw error;
+      if (result) {
+        setData({ ...data, advantages: [...data.advantages, result[0]] });
+        setNewAdvantage({ title: '', description: '', icon: 'CheckCircle' });
+        toast.success('Преимущество добавлено!');
+      }
+    } catch (e) {
+      console.error('Error adding advantage', e);
+      toast.error('Ошибка добавления преимущества');
+    }
   };
 
-  const deleteAdvantage = (id: string) => {
-    saveData({ ...data, advantages: data.advantages.filter(a => a.id !== id) });
+  const deleteAdvantage = async (id: string) => {
+    try {
+      const { error } = await supabase.from('advantages').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, advantages: data.advantages.filter(a => a.id !== id) });
+      toast.success('Преимущество удалено!');
+    } catch (e) {
+      console.error('Error deleting advantage', e);
+      toast.error('Ошибка удаления преимущества');
+    }
   };
 
-  const addPartner = () => {
+  const addPartner = async () => {
     if (!newPartner.name || !newPartner.logoUrl) {
       toast.error('Заполните все поля');
       return;
     }
-    const partner: Partner = { ...newPartner, id: Date.now().toString() };
-    saveData({ ...data, partners: [...data.partners, partner] });
-    setNewPartner({ name: '', logoUrl: '' });
+    try {
+      const partner = {
+        name: newPartner.name,
+        logo_url: newPartner.logoUrl
+      };
+      const { data: result, error } = await supabase.from('partners').insert([partner]).select();
+      if (error) throw error;
+      if (result) {
+        const mapped = {
+          ...result[0],
+          logoUrl: result[0].logo_url
+        };
+        setData({ ...data, partners: [...data.partners, mapped] });
+        setNewPartner({ name: '', logoUrl: '' });
+        toast.success('Партнер добавлен!');
+      }
+    } catch (e) {
+      console.error('Error adding partner', e);
+      toast.error('Ошибка добавления партнера');
+    }
   };
 
-  const deletePartner = (id: string) => {
-    saveData({ ...data, partners: data.partners.filter(p => p.id !== id) });
+  const deletePartner = async (id: string) => {
+    try {
+      const { error } = await supabase.from('partners').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, partners: data.partners.filter(p => p.id !== id) });
+      toast.success('Партнер удален!');
+    } catch (e) {
+      console.error('Error deleting partner', e);
+      toast.error('Ошибка удаления партнера');
+    }
   };
 
-  const updateHero = () => {
-    saveData({ ...data, hero: data.hero });
+  const updateHero = async () => {
+    try {
+      const heroData = {
+        title: data.hero.title,
+        highlighted_text: data.hero.highlightedText,
+        subtitle: data.hero.subtitle,
+        description: data.hero.description
+      };
+      const { error } = await supabase.from('hero').update(heroData).eq('id', (await supabase.from('hero').select('id').single()).data?.id);
+      if (error) throw error;
+      toast.success('Главная страница обновлена!');
+    } catch (e) {
+      console.error('Error updating hero', e);
+      toast.error('Ошибка обновления');
+    }
   };
 
-  const updateOrderStatus = (orderId: string, status: 'new' | 'processing' | 'completed') => {
-    const updatedOrders = data.orders.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    );
-    saveData({ ...data, orders: updatedOrders });
+  const updateOrderStatus = async (orderId: string, status: 'new' | 'processing' | 'completed') => {
+    try {
+      const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
+      if (error) throw error;
+      const updatedOrders = data.orders.map(order =>
+        order.id === orderId ? { ...order, status } : order
+      );
+      setData({ ...data, orders: updatedOrders });
+      toast.success('Статус обновлен!');
+    } catch (e) {
+      console.error('Error updating order', e);
+      toast.error('Ошибка обновления статуса');
+    }
   };
 
-  const deleteOrder = (id: string) => {
-    saveData({ ...data, orders: data.orders.filter(o => o.id !== id) });
+  const deleteOrder = async (id: string) => {
+    try {
+      const { error } = await supabase.from('orders').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, orders: data.orders.filter(o => o.id !== id) });
+      toast.success('Заказ удален!');
+    } catch (e) {
+      console.error('Error deleting order', e);
+      toast.error('Ошибка удаления заказа');
+    }
   };
 
-  const addCategory = () => {
+  const addCategory = async () => {
     if (!newCategory.name) {
       toast.error('Введите название категории');
       return;
     }
-    const category: Category = { ...newCategory, id: Date.now().toString() };
-    saveData({ ...data, categories: [...data.categories, category] });
-    setNewCategory({ name: '', icon: 'Package' });
+    try {
+      const { data: result, error } = await supabase.from('categories').insert([newCategory]).select();
+      if (error) throw error;
+      if (result) {
+        setData({ ...data, categories: [...data.categories, result[0]] });
+        setNewCategory({ name: '', icon: 'Package' });
+        toast.success('Категория добавлена!');
+      }
+    } catch (e) {
+      console.error('Error adding category', e);
+      toast.error('Ошибка добавления категории');
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    saveData({ ...data, categories: data.categories.filter(c => c.id !== id) });
+  const deleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, categories: data.categories.filter(c => c.id !== id) });
+      toast.success('Категория удалена!');
+    } catch (e) {
+      console.error('Error deleting category', e);
+      toast.error('Ошибка удаления категории');
+    }
   };
 
-  const addProduct = () => {
+  const addProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.categoryId) {
       toast.error('Заполните все обязательные поля');
       return;
     }
-    const product: Product = { 
-      ...newProduct, 
-      id: Date.now().toString(),
-      price: parseFloat(newProduct.price)
-    };
-    saveData({ ...data, products: [...data.products, product] });
-    setNewProduct({ name: '', imageUrl: '', price: '', description: '', specs: '', categoryId: '' });
+    try {
+      const product = {
+        name: newProduct.name,
+        image_url: newProduct.imageUrl,
+        price: parseFloat(newProduct.price),
+        description: newProduct.description,
+        specs: newProduct.specs,
+        category_id: newProduct.categoryId
+      };
+      const { data: result, error } = await supabase.from('products').insert([product]).select();
+      if (error) throw error;
+      if (result) {
+        const mapped = {
+          ...result[0],
+          imageUrl: result[0].image_url,
+          categoryId: result[0].category_id
+        };
+        setData({ ...data, products: [...data.products, mapped] });
+        setNewProduct({ name: '', imageUrl: '', price: '', description: '', specs: '', categoryId: '' });
+        toast.success('Товар добавлен!');
+      }
+    } catch (e) {
+      console.error('Error adding product', e);
+      toast.error('Ошибка добавления товара');
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    saveData({ ...data, products: data.products.filter(p => p.id !== id) });
+  const deleteProduct = async (id: string) => {
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+      setData({ ...data, products: data.products.filter(p => p.id !== id) });
+      toast.success('Товар удален!');
+    } catch (e) {
+      console.error('Error deleting product', e);
+      toast.error('Ошибка удаления товара');
+    }
   };
 
   const handleImportData = async (e: React.ChangeEvent<HTMLInputElement>) => {

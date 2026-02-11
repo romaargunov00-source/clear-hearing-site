@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface Category {
   id: string;
@@ -175,80 +176,76 @@ const Index = () => {
 
   const loadData = async () => {
     try {
-      const [categoriesRes, productsRes, allDataRes] = await Promise.all([
-        fetch('https://functions.poehali.dev/7dcdd31e-3afc-4dd1-8b1e-3ddb3a43c1e2'),
-        fetch('https://functions.poehali.dev/e7fdbb37-3c51-41af-84f1-84aa0402a944'),
-        fetch('https://functions.poehali.dev/53f4f863-66fb-4201-bc3a-49119b5b8e92?type=all')
+      const [categoriesRes, productsRes, servicesRes, articlesRes, aboutRes, advantagesRes, partnersRes, heroRes, ordersRes] = await Promise.all([
+        supabase.from('categories').select('*'),
+        supabase.from('products').select('*'),
+        supabase.from('services').select('*'),
+        supabase.from('articles').select('*'),
+        supabase.from('about_items').select('*'),
+        supabase.from('advantages').select('*'),
+        supabase.from('partners').select('*'),
+        supabase.from('hero').select('*').maybeSingle(),
+        supabase.from('orders').select('*')
       ]);
 
-      if (!categoriesRes.ok || !productsRes.ok || !allDataRes.ok) {
-        throw new Error('Failed to load data from API');
-      }
-
-      const categoriesData = await categoriesRes.json();
-      const productsData = await productsRes.json();
-      const dbData = await allDataRes.json();
-
       const newData = {
-        categories: categoriesData.length > 0 ? categoriesData.map((c: any) => ({
-          id: c.id.toString(),
+        categories: (categoriesRes.data && categoriesRes.data.length > 0) ? categoriesRes.data.map((c: any) => ({
+          id: c.id,
           name: c.name,
           icon: c.icon
         })) : defaultCategories,
-        products: productsData.map((p: any) => ({
-          id: p.id.toString(),
+        products: (productsRes.data || []).map((p: any) => ({
+          id: p.id,
           name: p.name,
           imageUrl: p.image_url || '',
           price: parseFloat(p.price),
           description: p.description || '',
           specs: p.specs || '',
-          categoryId: p.category_id?.toString() || ''
+          categoryId: p.category_id || ''
         })),
-        services: dbData.services.map((s: any) => ({
-          id: s.id.toString(),
-          name: s.name,
-          imageUrl: s.image_url || '',
-          contact: s.contact || '',
-          link: s.link || '',
-          description: s.description || ''
+        services: (servicesRes.data || []).map((s: any) => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          price: s.price,
+          icon: s.icon
         })),
-        about: dbData.about.map((a: any) => ({
-          id: a.id.toString(),
-          title: a.title,
-          description: a.description
-        })),
-        articles: dbData.articles.map((ar: any) => ({
-          id: ar.id.toString(),
+        articles: (articlesRes.data || []).map((ar: any) => ({
+          id: ar.id,
           title: ar.title,
           content: ar.content,
           imageUrl: ar.image_url || '',
           date: ar.date
         })),
-        advantages: dbData.advantages.length > 0 ? dbData.advantages.map((ad: any) => ({
-          id: ad.id.toString(),
+        about: (aboutRes.data || []).map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          description: a.description
+        })),
+        advantages: (advantagesRes.data && advantagesRes.data.length > 0) ? advantagesRes.data.map((ad: any) => ({
+          id: ad.id,
           icon: ad.icon,
           title: ad.title,
           description: ad.description
         })) : defaultAdvantages,
-        partners: dbData.partners.length > 0 ? dbData.partners.map((p: any) => ({
-          id: p.id.toString(),
+        partners: (partnersRes.data && partnersRes.data.length > 0) ? partnersRes.data.map((p: any) => ({
+          id: p.id,
           name: p.name,
           logoUrl: p.logo_url
         })) : defaultPartners,
-        hero: dbData.hero.title ? {
-          title: dbData.hero.title,
-          highlightedText: dbData.hero.highlighted_text,
-          subtitle: dbData.hero.subtitle,
-          description: dbData.hero.description
+        hero: heroRes.data && heroRes.data.title ? {
+          title: heroRes.data.title,
+          highlightedText: heroRes.data.highlighted_text,
+          subtitle: heroRes.data.subtitle,
+          description: heroRes.data.description
         } : {
           title: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
           highlightedText: 'МИР ЧЕТКОГО ЗВУКА',
           subtitle: 'С НАШИМИ РЕШЕНИЯМИ!',
           description: 'Инновационные слуховые технологии от мировых лидеров с персональной настройкой и пожизненной поддержкой'
         },
-        orders: dbData.orders.map((o: any) => ({
-          id: o.id.toString(),
-          items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+        orders: (ordersRes.data || []).map((o: any) => ({
+          id: o.id,
           total: parseFloat(o.total),
           customer: {
             firstName: o.customer_first_name,
@@ -258,19 +255,19 @@ const Index = () => {
             address: o.customer_address,
             comment: o.customer_comment || ''
           },
-          date: o.created_at,
+          date: o.date,
           status: o.status
         }))
       };
 
       setData(newData);
-      
+
     } catch (error) {
-      console.error('Failed to load data from API', error);
-      toast({ 
-        title: 'Ошибка загрузки', 
-        description: 'Не удалось загрузить данные из базы данных', 
-        variant: 'destructive' 
+      console.error('Failed to load data', error);
+      toast({
+        title: 'Ошибка загрузки',
+        description: 'Не удалось загрузить данные из базы данных',
+        variant: 'destructive'
       });
     }
   };
@@ -379,31 +376,39 @@ const Index = () => {
     }
 
     setOrderProcessing(true);
-    
+
     try {
-      const orderPayload = {
-        items: cart.map(item => ({
-          product: {
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price,
-            imageUrl: item.product.imageUrl
-          },
-          quantity: item.quantity
-        })),
+      const { data: order, error: orderError } = await supabase.from('orders').insert([{
+        customer_first_name: orderForm.firstName,
+        customer_last_name: orderForm.lastName,
+        customer_phone: orderForm.phone,
+        customer_email: orderForm.email,
+        customer_address: orderForm.address,
+        customer_comment: orderForm.comment,
         total: getTotalPrice(),
-        customer: { ...orderForm },
+        date: new Date().toISOString().split('T')[0],
         status: 'new'
-      };
+      }]).select();
 
-      const response = await fetch('https://functions.poehali.dev/53f4f863-66fb-4201-bc3a-49119b5b8e92?type=order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
-      });
-
-      if (!response.ok) {
+      if (orderError || !order) {
         throw new Error('Не удалось сохранить заказ');
+      }
+
+      const orderId = order[0].id;
+      const orderItems = await Promise.all(
+        cart.map(item =>
+          supabase.from('order_items').insert({
+            order_id: orderId,
+            product_id: item.product.id,
+            product_name: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price
+          })
+        )
+      );
+
+      if (orderItems.some((res: any) => res.error)) {
+        throw new Error('Не удалось сохранить позиции заказа');
       }
 
       await loadData();

@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import Icon from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/lib/supabase';
 
 const STORAGE_KEY = 'yasniy_sluh_data';
 

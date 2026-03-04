@@ -1316,96 +1316,127 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
   const saveToDatabase = async () => {
     const emptyCategories = data.categories.filter(c => !c.name || !c.name.trim());
     const emptyProducts = data.products.filter(p => !p.name || !p.name.trim());
-    
+
     if (emptyCategories.length > 0 || emptyProducts.length > 0) {
-      toast({ 
-        title: 'Внимание', 
-        description: `Пустые записи не будут сохранены: ${emptyCategories.length} категорий, ${emptyProducts.length} товаров`, 
-        variant: 'destructive' 
+      toast({
+        title: 'Внимание',
+        description: `Пустые записи не будут сохранены: ${emptyCategories.length} категорий, ${emptyProducts.length} товаров`,
+        variant: 'destructive'
       });
     }
-    
+
     setIsSaving(true);
     try {
-      const payload = {
-        categories: data.categories
-          .filter(c => c && c.name && c.name.trim())
-          .map(c => ({
-            id: c.id,
-            name: c.name,
-            icon: c.icon
-          })),
-        products: data.products
-          .filter(p => p && p.name && p.name.trim())
-          .map(p => ({
-            name: p.name,
-            imageUrl: p.imageUrl || '',
-            price: p.price || 0,
-            description: p.description || '',
-            specs: p.specs || '',
-            categoryId: p.categoryId || ''
-          })),
-        services: data.services
-          .filter(s => s && s.name && s.name.trim())
-          .map(s => ({
-            name: s.name,
-            imageUrl: s.imageUrl || '',
-            contact: s.contact || '',
-            link: s.link || '',
-            description: s.description || ''
-          })),
-        articles: data.articles
-          .filter(a => a && a.title && a.title.trim())
-          .map(a => ({
-            title: a.title,
-            content: a.content || '',
-            imageUrl: a.imageUrl || '',
-            date: a.date
-          })),
-        about: data.about
-          .filter(ab => ab && ab.title && ab.title.trim())
-          .map(ab => ({
-            title: ab.title,
-            description: ab.description || ''
-          })),
-        advantages: data.advantages
-          .filter(ad => ad && ad.title && ad.title.trim())
-          .map(ad => ({
-            icon: ad.icon || 'Star',
-            title: ad.title,
-            description: ad.description || ''
-          })),
-        partners: data.partners
-          .filter(p => p && p.name && p.name.trim())
-          .map(p => ({
-            name: p.name,
-            logoUrl: p.logoUrl || ''
-          })),
-        hero: {
-          title: data.hero.title || '',
-          highlightedText: data.hero.highlightedText || '',
-          subtitle: data.hero.subtitle || '',
-          description: data.hero.description || '',
-          imageUrl: data.hero.imageUrl || ''
-        }
-      };
+      await supabase.from('categories').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('products').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('services').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('articles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('about_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('advantages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('partners').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
-      const response = await fetch('https://functions.poehali.dev/53f4f863-66fb-4201-bc3a-49119b5b8e92?type=bulk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const categoryInserts = data.categories
+        .filter(c => c && c.name && c.name.trim())
+        .map(c => ({
+          name: c.name,
+          icon: c.icon
+        }));
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      const productInserts = data.products
+        .filter(p => p && p.name && p.name.trim())
+        .map(p => ({
+          name: p.name,
+          image_url: p.imageUrl || '',
+          price: p.price || 0,
+          description: p.description || '',
+          specs: p.specs || '',
+          category_id: p.categoryId || ''
+        }));
+
+      const serviceInserts = data.services
+        .filter(s => s && s.title && s.title.trim())
+        .map(s => ({
+          title: s.title,
+          description: s.description || '',
+          price: s.price || '',
+          icon: s.icon
+        }));
+
+      const articleInserts = data.articles
+        .filter(a => a && a.title && a.title.trim())
+        .map(a => ({
+          title: a.title,
+          content: a.content || '',
+          image_url: a.imageUrl || '',
+          date: a.date
+        }));
+
+      const aboutInserts = data.about
+        .filter(ab => ab && ab.title && ab.title.trim())
+        .map(ab => ({
+          title: ab.title,
+          description: ab.description || ''
+        }));
+
+      const advantageInserts = data.advantages
+        .filter(ad => ad && ad.title && ad.title.trim())
+        .map(ad => ({
+          icon: ad.icon || 'CheckCircle',
+          title: ad.title,
+          description: ad.description || ''
+        }));
+
+      const partnerInserts = data.partners
+        .filter(p => p && p.name && p.name.trim())
+        .map(p => ({
+          name: p.name,
+          logo_url: p.logoUrl || ''
+        }));
+
+      if (categoryInserts.length > 0) {
+        const { error } = await supabase.from('categories').insert(categoryInserts);
+        if (error) throw error;
       }
 
+      if (productInserts.length > 0) {
+        const { error } = await supabase.from('products').insert(productInserts);
+        if (error) throw error;
+      }
+
+      if (serviceInserts.length > 0) {
+        const { error } = await supabase.from('services').insert(serviceInserts);
+        if (error) throw error;
+      }
+
+      if (articleInserts.length > 0) {
+        const { error } = await supabase.from('articles').insert(articleInserts);
+        if (error) throw error;
+      }
+
+      if (aboutInserts.length > 0) {
+        const { error } = await supabase.from('about_items').insert(aboutInserts);
+        if (error) throw error;
+      }
+
+      if (advantageInserts.length > 0) {
+        const { error } = await supabase.from('advantages').insert(advantageInserts);
+        if (error) throw error;
+      }
+
+      if (partnerInserts.length > 0) {
+        const { error } = await supabase.from('partners').insert(partnerInserts);
+        if (error) throw error;
+      }
+
+      const { error: heroError } = await supabase.from('hero').update({
+        title: data.hero.title || '',
+        highlighted_text: data.hero.highlightedText || '',
+        subtitle: data.hero.subtitle || '',
+        description: data.hero.description || ''
+      }).eq('id', (await supabase.from('hero').select('id').maybeSingle()).data?.id || '');
+
       await loadData();
-      toast({ title: 'Успешно сохранено!', description: 'Все изменения сохранены в базу данных для всех пользователей' });
+      toast({ title: 'Успешно сохранено!', description: 'Все изменения сохранены в базу данных' });
     } catch (error) {
       console.error('Failed to save to database:', error);
       toast({ title: 'Ошибка', description: `Не удалось сохранить в базу данных: ${error.message}`, variant: 'destructive' });

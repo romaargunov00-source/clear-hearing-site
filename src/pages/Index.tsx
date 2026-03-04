@@ -1350,7 +1350,7 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
           price: p.price || 0,
           description: p.description || '',
           specs: p.specs || '',
-          category_id: p.categoryId || ''
+          category_id: p.categoryId || null
         }));
 
       const serviceInserts = data.services
@@ -1428,12 +1428,16 @@ const AdminPanel = ({ data, onSave, onExport, onImport }: {
         if (error) throw error;
       }
 
-      const { error: heroError } = await supabase.from('hero').update({
-        title: data.hero.title || '',
-        highlighted_text: data.hero.highlightedText || '',
-        subtitle: data.hero.subtitle || '',
-        description: data.hero.description || ''
-      }).eq('id', (await supabase.from('hero').select('id').maybeSingle()).data?.id || '');
+      const heroRow = await supabase.from('hero').select('id').maybeSingle();
+      if (heroRow.data?.id) {
+        const { error: heroError } = await supabase.from('hero').update({
+          title: data.hero.title || '',
+          highlighted_text: data.hero.highlightedText || '',
+          subtitle: data.hero.subtitle || '',
+          description: data.hero.description || ''
+        }).eq('id', heroRow.data.id);
+        if (heroError) throw heroError;
+      }
 
       await loadData();
       toast({ title: 'Успешно сохранено!', description: 'Все изменения сохранены в базу данных' });

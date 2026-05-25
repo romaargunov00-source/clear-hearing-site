@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
+const ADMIN_PASSWORD = '3956Qqqq';
+
 const AdminLogin = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -15,19 +17,9 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-auth`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ password, action: 'verify' }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        sessionStorage.setItem('admin_token', data.token);
+      if (password === ADMIN_PASSWORD) {
+        const token = btoa(`admin:${Date.now()}`);
+        sessionStorage.setItem('admin_token', token);
         toast.success('Успешный вход!');
         navigate('/admin');
       } else {

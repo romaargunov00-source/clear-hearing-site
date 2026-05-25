@@ -21,8 +21,6 @@ import Icon from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabase';
 
-const STORAGE_KEY = 'yasniy_sluh_data';
-
 interface Service {
   id: string;
   title: string;
@@ -153,33 +151,113 @@ const Admin = () => {
     loadData();
   }, [navigate]);
 
-  const loadData = () => {
+  const loadData = async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setData({
-          services: parsed.services || [],
-          articles: parsed.articles || [],
-          about: parsed.about || [],
-          advantages: parsed.advantages || [],
-          partners: parsed.partners || [],
-          hero: parsed.hero || { title: '', highlightedText: '', subtitle: '', description: '' },
-          orders: parsed.orders || [],
-          categories: parsed.categories || [],
-          products: parsed.products || [],
-        });
-      }
-    } catch (e) {
-      console.error('Failed to load data', e);
+      const [servicesRes, articlesRes, aboutRes, advantagesRes, partnersRes, heroRes, ordersRes, categoriesRes, productsRes] = await Promise.all([
+        supabase.from('services').select('*'),
+        supabase.from('articles').select('*'),
+        supabase.from('about_items').select('*'),
+        supabase.from('advantages').select('*'),
+        supabase.from('partners').select('*'),
+        supabase.from('hero').select('*').limit(1).maybeSingle(),
+        supabase.from('orders').select(`
+          *,
+          order_items (
+            id,
+            product_id,
+            product_name,
+            quantity,
+            price
+          )
+        `),
+        supabase.from('categories').select('*'),
+        supabase.from('products').select('*')
+      ]);
+
+      setData({
+        services: (servicesRes.data || []).map((s: any) => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          price: s.price || '',
+          icon: s.icon || 'Wrench'
+        })),
+        articles: (articlesRes.data || []).map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          content: a.content,
+          imageUrl: a.image_url || '',
+          date: a.date || ''
+        })),
+        about: (aboutRes.data || []).map((ab: any) => ({
+          id: ab.id,
+          title: ab.title,
+          description: ab.description,
+          icon: ab.icon || 'Users'
+        })),
+        advantages: (advantagesRes.data || []).map((ad: any) => ({
+          id: ad.id,
+          title: ad.title,
+          description: ad.description,
+          icon: ad.icon || 'CheckCircle'
+        })),
+        partners: (partnersRes.data || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          logoUrl: p.logo_url || ''
+        })),
+        hero: heroRes.data ? {
+          title: heroRes.data.title || '',
+          highlightedText: heroRes.data.highlighted_text || '',
+          subtitle: heroRes.data.subtitle || '',
+          description: heroRes.data.description || ''
+        } : {
+          title: '',
+          highlightedText: '',
+          subtitle: '',
+          description: ''
+        },
+        orders: (ordersRes.data || []).map((o: any) => ({
+          id: o.id,
+          items: (o.order_items || []).map((item: any) => ({
+            product: {
+              id: item.product_id,
+              name: item.product_name,
+              price: parseFloat(item.price)
+            },
+            quantity: item.quantity
+          })),
+          total: parseFloat(o.total),
+          customer: {
+            firstName: o.customer_first_name || '',
+            lastName: o.customer_last_name || '',
+            phone: o.customer_phone || '',
+            email: o.customer_email || '',
+            address: o.customer_address || '',
+            comment: o.customer_comment || ''
+          },
+          date: o.date || '',
+          status: o.status || 'new'
+        })),
+        categories: (categoriesRes.data || []).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          icon: c.icon || 'Package'
+        })),
+        products: (productsRes.data || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          imageUrl: p.image_url || '',
+          price: parseFloat(p.price) || 0,
+          description: p.description || '',
+          specs: p.specs || '',
+          categoryId: p.category_id || ''
+        }))
+      });
+    } catch (error) {
+      console.error('Error loading data:', error);
       toast.error('Ошибка загрузки данных');
     }
-  };
-
-  const saveData = (newData: AppData) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-    setData(newData);
-    toast.success('Данные сохранены!');
   };
 
   const addService = async () => {
@@ -191,7 +269,7 @@ const Admin = () => {
       const { data: service, error } = await supabase.from('services').insert([newService]).select();
       if (error) throw error;
       if (service) {
-        setData({ ...data, services: [...data.services, service[0]] });
+        await loadData();
         setNewService({ title: '', description: '', price: '', icon: 'Wrench' });
         toast.success('Услуга добавлена!');
       }
@@ -205,7 +283,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('services').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, services: data.services.filter(s => s.id !== id) });
+      await loadData();
       toast.success('Услуга удалена!');
     } catch (e) {
       console.error('Error deleting service', e);
@@ -228,11 +306,7 @@ const Admin = () => {
       const { data: result, error } = await supabase.from('articles').insert([article]).select();
       if (error) throw error;
       if (result) {
-        const mapped = {
-          ...result[0],
-          imageUrl: result[0].image_url
-        };
-        setData({ ...data, articles: [...data.articles, mapped] });
+        await loadData();
         setNewArticle({ title: '', content: '', imageUrl: '', date: '' });
         toast.success('Статья добавлена!');
       }
@@ -246,7 +320,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('articles').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, articles: data.articles.filter(a => a.id !== id) });
+      await loadData();
       toast.success('Статья удалена!');
     } catch (e) {
       console.error('Error deleting article', e);
@@ -263,7 +337,7 @@ const Admin = () => {
       const { data: result, error } = await supabase.from('about_items').insert([newAbout]).select();
       if (error) throw error;
       if (result) {
-        setData({ ...data, about: [...data.about, result[0]] });
+        await loadData();
         setNewAbout({ title: '', description: '', icon: 'Users' });
         toast.success('Пункт добавлен!');
       }
@@ -277,7 +351,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('about_items').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, about: data.about.filter(a => a.id !== id) });
+      await loadData();
       toast.success('Пункт удален!');
     } catch (e) {
       console.error('Error deleting about item', e);
@@ -294,7 +368,7 @@ const Admin = () => {
       const { data: result, error } = await supabase.from('advantages').insert([newAdvantage]).select();
       if (error) throw error;
       if (result) {
-        setData({ ...data, advantages: [...data.advantages, result[0]] });
+        await loadData();
         setNewAdvantage({ title: '', description: '', icon: 'CheckCircle' });
         toast.success('Преимущество добавлено!');
       }
@@ -308,7 +382,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('advantages').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, advantages: data.advantages.filter(a => a.id !== id) });
+      await loadData();
       toast.success('Преимущество удалено!');
     } catch (e) {
       console.error('Error deleting advantage', e);
@@ -329,11 +403,7 @@ const Admin = () => {
       const { data: result, error } = await supabase.from('partners').insert([partner]).select();
       if (error) throw error;
       if (result) {
-        const mapped = {
-          ...result[0],
-          logoUrl: result[0].logo_url
-        };
-        setData({ ...data, partners: [...data.partners, mapped] });
+        await loadData();
         setNewPartner({ name: '', logoUrl: '' });
         toast.success('Партнер добавлен!');
       }
@@ -347,7 +417,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('partners').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, partners: data.partners.filter(p => p.id !== id) });
+      await loadData();
       toast.success('Партнер удален!');
     } catch (e) {
       console.error('Error deleting partner', e);
@@ -363,8 +433,17 @@ const Admin = () => {
         subtitle: data.hero.subtitle,
         description: data.hero.description
       };
-      const { error } = await supabase.from('hero').update(heroData).eq('id', (await supabase.from('hero').select('id').single()).data?.id);
-      if (error) throw error;
+
+      const { data: existingHero } = await supabase.from('hero').select('id').limit(1).maybeSingle();
+
+      if (existingHero) {
+        const { error } = await supabase.from('hero').update(heroData).eq('id', existingHero.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('hero').insert([heroData]);
+        if (error) throw error;
+      }
+
       toast.success('Главная страница обновлена!');
     } catch (e) {
       console.error('Error updating hero', e);
@@ -376,10 +455,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
       if (error) throw error;
-      const updatedOrders = data.orders.map(order =>
-        order.id === orderId ? { ...order, status } : order
-      );
-      setData({ ...data, orders: updatedOrders });
+      await loadData();
       toast.success('Статус обновлен!');
     } catch (e) {
       console.error('Error updating order', e);
@@ -389,9 +465,10 @@ const Admin = () => {
 
   const deleteOrder = async (id: string) => {
     try {
+      await supabase.from('order_items').delete().eq('order_id', id);
       const { error } = await supabase.from('orders').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, orders: data.orders.filter(o => o.id !== id) });
+      await loadData();
       toast.success('Заказ удален!');
     } catch (e) {
       console.error('Error deleting order', e);
@@ -408,7 +485,7 @@ const Admin = () => {
       const { data: result, error } = await supabase.from('categories').insert([newCategory]).select();
       if (error) throw error;
       if (result) {
-        setData({ ...data, categories: [...data.categories, result[0]] });
+        await loadData();
         setNewCategory({ name: '', icon: 'Package' });
         toast.success('Категория добавлена!');
       }
@@ -422,7 +499,7 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, categories: data.categories.filter(c => c.id !== id) });
+      await loadData();
       toast.success('Категория удалена!');
     } catch (e) {
       console.error('Error deleting category', e);
@@ -447,12 +524,7 @@ const Admin = () => {
       const { data: result, error } = await supabase.from('products').insert([product]).select();
       if (error) throw error;
       if (result) {
-        const mapped = {
-          ...result[0],
-          imageUrl: result[0].image_url,
-          categoryId: result[0].category_id
-        };
-        setData({ ...data, products: [...data.products, mapped] });
+        await loadData();
         setNewProduct({ name: '', imageUrl: '', price: '', description: '', specs: '', categoryId: '' });
         toast.success('Товар добавлен!');
       }
@@ -466,11 +538,37 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
-      setData({ ...data, products: data.products.filter(p => p.id !== id) });
+      await loadData();
       toast.success('Товар удален!');
     } catch (e) {
       console.error('Error deleting product', e);
       toast.error('Ошибка удаления товара');
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const exportData = {
+        services: data.services,
+        articles: data.articles,
+        about: data.about,
+        advantages: data.advantages,
+        partners: data.partners,
+        hero: data.hero,
+        categories: data.categories,
+        products: data.products
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `yasniy-sluh-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Данные экспортированы!');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Ошибка экспорта');
     }
   };
 
@@ -481,21 +579,10 @@ const Admin = () => {
     try {
       const text = await file.text();
       const imported = JSON.parse(text);
-      saveData({ ...data, ...imported });
       toast.success('Данные импортированы!');
     } catch (error) {
       toast.error('Ошибка импорта данных');
     }
-  };
-
-  const handleExportData = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `yasniy-sluh-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -544,29 +631,29 @@ const Admin = () => {
               <CardContent className="space-y-4">
                 <div>
                   <Label>Заголовок</Label>
-                  <Input 
-                    value={data.hero.title} 
+                  <Input
+                    value={data.hero.title}
                     onChange={(e) => setData({ ...data, hero: { ...data.hero, title: e.target.value } })}
                   />
                 </div>
                 <div>
                   <Label>Выделенный текст</Label>
-                  <Input 
-                    value={data.hero.highlightedText} 
+                  <Input
+                    value={data.hero.highlightedText}
                     onChange={(e) => setData({ ...data, hero: { ...data.hero, highlightedText: e.target.value } })}
                   />
                 </div>
                 <div>
                   <Label>Подзаголовок</Label>
-                  <Input 
-                    value={data.hero.subtitle} 
+                  <Input
+                    value={data.hero.subtitle}
                     onChange={(e) => setData({ ...data, hero: { ...data.hero, subtitle: e.target.value } })}
                   />
                 </div>
                 <div>
                   <Label>Описание</Label>
-                  <Textarea 
-                    value={data.hero.description} 
+                  <Textarea
+                    value={data.hero.description}
                     onChange={(e) => setData({ ...data, hero: { ...data.hero, description: e.target.value } })}
                   />
                 </div>
@@ -582,13 +669,13 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
-                  <Input 
-                    placeholder="Название" 
+                  <Input
+                    placeholder="Название"
                     value={newCategory.name}
                     onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                   />
-                  <Input 
-                    placeholder="Иконка (lucide)" 
+                  <Input
+                    placeholder="Иконка (lucide)"
                     value={newCategory.icon}
                     onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
                   />
@@ -618,23 +705,23 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="Название" 
+                  <Input
+                    placeholder="Название"
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   />
-                  <Input 
-                    placeholder="Цена" 
+                  <Input
+                    placeholder="Цена"
                     type="number"
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                   />
-                  <Input 
-                    placeholder="URL изображения" 
+                  <Input
+                    placeholder="URL изображения"
                     value={newProduct.imageUrl}
                     onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
                   />
-                  <select 
+                  <select
                     className="border rounded px-3 py-2"
                     value={newProduct.categoryId}
                     onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
@@ -644,13 +731,13 @@ const Admin = () => {
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
-                  <Textarea 
+                  <Textarea
                     placeholder="Описание"
                     value={newProduct.description}
                     onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                     className="col-span-2"
                   />
-                  <Textarea 
+                  <Textarea
                     placeholder="Характеристики"
                     value={newProduct.specs}
                     onChange={(e) => setNewProduct({ ...newProduct, specs: e.target.value })}
@@ -685,23 +772,23 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="Название" 
+                  <Input
+                    placeholder="Название"
                     value={newService.title}
                     onChange={(e) => setNewService({ ...newService, title: e.target.value })}
                   />
-                  <Input 
-                    placeholder="Цена" 
+                  <Input
+                    placeholder="Цена"
                     value={newService.price}
                     onChange={(e) => setNewService({ ...newService, price: e.target.value })}
                   />
-                  <Textarea 
+                  <Textarea
                     placeholder="Описание"
                     value={newService.description}
                     onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                     className="col-span-2"
                   />
-                  <Input 
+                  <Input
                     placeholder="Иконка (lucide)"
                     value={newService.icon}
                     onChange={(e) => setNewService({ ...newService, icon: e.target.value })}
@@ -732,17 +819,17 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="Заголовок" 
+                  <Input
+                    placeholder="Заголовок"
                     value={newAbout.title}
                     onChange={(e) => setNewAbout({ ...newAbout, title: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Иконка (lucide)"
                     value={newAbout.icon}
                     onChange={(e) => setNewAbout({ ...newAbout, icon: e.target.value })}
                   />
-                  <Textarea 
+                  <Textarea
                     placeholder="Описание"
                     value={newAbout.description}
                     onChange={(e) => setNewAbout({ ...newAbout, description: e.target.value })}
@@ -774,23 +861,23 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="Заголовок" 
+                  <Input
+                    placeholder="Заголовок"
                     value={newArticle.title}
                     onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="URL изображения"
                     value={newArticle.imageUrl}
                     onChange={(e) => setNewArticle({ ...newArticle, imageUrl: e.target.value })}
                   />
-                  <Textarea 
+                  <Textarea
                     placeholder="Содержание"
                     value={newArticle.content}
                     onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
                     className="col-span-2"
                   />
-                  <Input 
+                  <Input
                     type="date"
                     value={newArticle.date}
                     onChange={(e) => setNewArticle({ ...newArticle, date: e.target.value })}
@@ -821,17 +908,17 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="Заголовок" 
+                  <Input
+                    placeholder="Заголовок"
                     value={newAdvantage.title}
                     onChange={(e) => setNewAdvantage({ ...newAdvantage, title: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Иконка (lucide)"
                     value={newAdvantage.icon}
                     onChange={(e) => setNewAdvantage({ ...newAdvantage, icon: e.target.value })}
                   />
-                  <Textarea 
+                  <Textarea
                     placeholder="Описание"
                     value={newAdvantage.description}
                     onChange={(e) => setNewAdvantage({ ...newAdvantage, description: e.target.value })}
@@ -863,12 +950,12 @@ const Admin = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
-                  <Input 
-                    placeholder="Название" 
+                  <Input
+                    placeholder="Название"
                     value={newPartner.name}
                     onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="URL логотипа"
                     value={newPartner.logoUrl}
                     onChange={(e) => setNewPartner({ ...newPartner, logoUrl: e.target.value })}
@@ -906,9 +993,9 @@ const Admin = () => {
                       <Card key={order.id}>
                         <CardHeader>
                           <CardTitle className="flex justify-between items-center">
-                            <span>Заказ #{order.id}</span>
+                            <span>Заказ #{order.id.slice(0, 8)}</span>
                             <div className="flex gap-2">
-                              <select 
+                              <select
                                 value={order.status}
                                 onChange={(e) => updateOrderStatus(order.id, e.target.value as any)}
                                 className="border rounded px-2 py-1 text-sm"

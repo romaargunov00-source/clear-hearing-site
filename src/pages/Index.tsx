@@ -914,9 +914,12 @@ const Index = () => {
               </div>
             </div>
           </div>
-          <div className="border-t border-primary/20 mt-6 md:mt-8 pt-4 md:pt-6 text-center">
+          <div className="border-t border-primary/20 mt-6 md:mt-8 pt-4 md:pt-6 text-center space-y-2">
             <p className="text-xs md:text-sm text-muted-foreground">
               © 2025 Ясный слух. Все права защищены
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Разработал: <a href="mailto:romaargunov@mail.ru" className="hover:text-primary transition">romaargunov@mail.ru</a>
             </p>
           </div>
         </div>

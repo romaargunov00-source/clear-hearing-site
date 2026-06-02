@@ -474,6 +474,13 @@ const Index = () => {
               <button onClick={() => setActiveSection('reviews')} className={`text-base font-bold hover:text-primary transition ${activeSection === 'reviews' ? 'text-primary' : 'text-foreground'}`}>ОТЗЫВЫ</button>
             </nav>
             <div className="flex gap-2">
+              <Button onClick={() => setShowAppointmentDialog(true)} className="bg-primary hover:bg-primary/90 font-bold text-white hidden md:flex">
+                <Icon name="Calendar" className="mr-2" size={18} />
+                ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
+              </Button>
+              <Button onClick={() => setShowAppointmentDialog(true)} size="icon" className="bg-primary hover:bg-primary/90 text-white md:hidden">
+                <Icon name="Calendar" size={20} />
+              </Button>
               <Button onClick={() => setShowCartDialog(true)} variant="outline" size="icon" className="border-2 relative">
                 <Icon name="ShoppingCart" size={20} />
                 {cart.length > 0 && (

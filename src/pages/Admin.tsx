@@ -127,7 +127,7 @@ const Admin = () => {
     products: [],
   });
 
-  const [newService, setNewService] = useState({ title: '', description: '', price: '', icon: 'Wrench' });
+  const [newService, setNewService] = useState({ title: '', description: '', price: '', icon: 'Wrench', imageUrl: '' });
   const [newArticle, setNewArticle] = useState({ title: '', content: '', imageUrl: '', date: '' });
   const [newAbout, setNewAbout] = useState({ title: '', description: '', icon: 'Users' });
   const [newAdvantage, setNewAdvantage] = useState({ title: '', description: '', icon: 'CheckCircle' });
@@ -266,11 +266,17 @@ const Admin = () => {
       return;
     }
     try {
-      const { data: service, error } = await supabase.from('services').insert([newService]).select();
+      const { data: service, error } = await supabase.from('services').insert([{
+        name: newService.title,
+        description: newService.description,
+        price: newService.price,
+        icon: newService.icon,
+        image_url: newService.imageUrl
+      }]).select();
       if (error) throw error;
       if (service) {
         await loadData();
-        setNewService({ title: '', description: '', price: '', icon: 'Wrench' });
+        setNewService({ title: '', description: '', price: '', icon: 'Wrench', imageUrl: '' });
         toast.success('Услуга добавлена!');
       }
     } catch (e) {

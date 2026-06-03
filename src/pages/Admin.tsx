@@ -782,6 +782,12 @@ const Admin = () => {
                     value={newService.price}
                     onChange={(e) => setNewService({ ...newService, price: e.target.value })}
                   />
+                  <Input
+                    placeholder="URL фото услуги"
+                    value={newService.imageUrl}
+                    onChange={(e) => setNewService({ ...newService, imageUrl: e.target.value })}
+                    className="col-span-2"
+                  />
                   <Textarea
                     placeholder="Описание"
                     value={newService.description}
@@ -798,9 +804,14 @@ const Admin = () => {
                 <div className="space-y-2">
                   {data.services.map(service => (
                     <div key={service.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <div>
-                        <div className="font-semibold">{service.title}</div>
-                        <div className="text-sm text-gray-500">{service.price}</div>
+                      <div className="flex gap-3 flex-1">
+                        {service.imageUrl && (
+                          <img src={service.imageUrl} alt={service.title} className="w-16 h-16 object-cover rounded" />
+                        )}
+                        <div>
+                          <div className="font-semibold">{service.title}</div>
+                          <div className="text-sm text-gray-500">{service.price}</div>
+                        </div>
                       </div>
                       <Button variant="destructive" size="sm" onClick={() => deleteService(service.id)}>
                         Удалить

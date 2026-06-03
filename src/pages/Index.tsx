@@ -49,11 +49,11 @@ interface Order {
 
 interface Service {
   id: string;
-  name: string;
-  imageUrl: string;
-  contact: string;
-  link: string;
+  title: string;
+  imageUrl?: string;
   description?: string;
+  price?: string;
+  icon?: string;
 }
 
 interface AboutItem {
@@ -199,10 +199,11 @@ const Index = () => {
         })),
         services: (servicesRes.data || []).map((s: any) => ({
           id: s.id,
-          title: s.title,
+          title: s.name,
           description: s.description,
           price: s.price,
-          icon: s.icon
+          icon: s.icon,
+          imageUrl: s.image_url || ''
         })),
         articles: (articlesRes.data || []).map((ar: any) => ({
           id: ar.id,
@@ -697,10 +698,9 @@ const Index = () => {
               ) : (
                 data.services.map((service) => (
                   <Card key={service.id} className="hover:border-primary transition border-2 card-transition">
-                    <img src={service.imageUrl} alt={service.name} className="w-full h-48 object-cover" />
+                    {service.imageUrl && <img src={service.imageUrl} alt={service.title} className="w-full h-48 object-cover" />}
                     <CardHeader>
-                      <CardTitle className="text-2xl font-black">{service.name}</CardTitle>
-                      <CardDescription>{service.contact}</CardDescription>
+                      <CardTitle className="text-2xl font-black">{service.title}</CardTitle>
                     </CardHeader>
                     {service.description && (
                       <CardContent>
@@ -708,8 +708,8 @@ const Index = () => {
                       </CardContent>
                     )}
                     <CardFooter>
-                      <Button 
-                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold" 
+                      <Button
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold"
                         onClick={() => setShowAppointmentDialog(true)}
                       >
                         ЗАПИСАТЬСЯ НА КОНСУЛЬТАЦИЮ

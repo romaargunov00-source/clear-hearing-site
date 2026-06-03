@@ -267,7 +267,7 @@ const Admin = () => {
     }
     try {
       const { data: service, error } = await supabase.from('services').insert([{
-        name: newService.title,
+        title: newService.title,
         description: newService.description,
         price: newService.price,
         icon: newService.icon,

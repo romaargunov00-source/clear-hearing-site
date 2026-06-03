@@ -199,7 +199,7 @@ const Index = () => {
         })),
         services: (servicesRes.data || []).map((s: any) => ({
           id: s.id,
-          title: s.name,
+          title: s.title,
           description: s.description,
           price: s.price,
           icon: s.icon,
@@ -277,12 +277,7 @@ const Index = () => {
         console.error('Failed to parse cart', e);
       }
     }
-    
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-    
-    return () => clearTimeout(timer);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {

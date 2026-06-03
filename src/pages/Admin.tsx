@@ -27,6 +27,7 @@ interface Service {
   description: string;
   price: string;
   icon: string;
+  imageUrl?: string;
 }
 
 interface Article {
@@ -180,7 +181,8 @@ const Admin = () => {
           title: s.title,
           description: s.description,
           price: s.price || '',
-          icon: s.icon || 'Wrench'
+          icon: s.icon || 'Wrench',
+          imageUrl: s.image_url || ''
         })),
         articles: (articlesRes.data || []).map((a: any) => ({
           id: a.id,

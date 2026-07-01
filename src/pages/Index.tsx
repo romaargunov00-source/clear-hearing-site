@@ -428,7 +428,7 @@ const Index = () => {
     }
   };
 
-  const scrollItems = [...data.products, ...data.services];
+  const scrollItems = [...data.products];
 
   if (isLoading) {
     return (
@@ -692,14 +692,17 @@ const Index = () => {
                 <p className="col-span-full text-center text-muted-foreground py-12">Услуги отсутствуют. Добавьте их через админ-панель.</p>
               ) : (
                 data.services.map((service) => (
-                  <Card key={service.id} className="hover:border-primary transition border-2 card-transition">
+                  <Card key={service.id} className="hover:border-primary transition border-2 card-transition flex flex-col">
                     {service.imageUrl && <img src={service.imageUrl} alt={service.title} className="w-full h-48 object-cover" />}
                     <CardHeader>
                       <CardTitle className="text-2xl font-black">{service.title}</CardTitle>
+                      {service.price && (
+                        <CardDescription className="text-primary text-xl font-bold">от {service.price} ₽</CardDescription>
+                      )}
                     </CardHeader>
                     {service.description && (
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">{service.description}</p>
+                      <CardContent className="flex-1">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{service.description}</p>
                       </CardContent>
                     )}
                     <CardFooter>

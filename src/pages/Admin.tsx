@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Icon from "@/components/ui/icon";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import * as XLSX from "xlsx";
 import CrudManager from "@/admin/CrudManager";
 import { entityConfigs, heroFields, orderStatusOptions } from "@/admin/entityConfigs";
 
@@ -256,6 +257,27 @@ export default function Admin() {
 
   const statusLabel = (status: string) => orderStatusOptions.find((o) => o.value === status)?.label || status;
 
+  const handleExportExcel = () => {
+    const rows = orders.map((o) => ({
+      "№": o.id.slice(0, 8),
+      "Дата": new Date(o.created_at).toLocaleString("ru-RU"),
+      "Статус": statusLabel(o.status),
+      "Имя": o.customer_first_name,
+      "Фамилия": o.customer_last_name,
+      "Телефон": o.customer_phone,
+      "Email": o.customer_email || "",
+      "Адрес": o.customer_address,
+      "Комментарий": o.customer_comment || "",
+      "Сумма (₽)": o.total,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Заказы");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Заказы_${dateStr}.xlsx`);
+  };
+
   if (!loginChecked) {
     return <div className="min-h-screen flex items-center justify-center"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -353,7 +375,15 @@ export default function Admin() {
     if (section === "orders") {
       return (
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Заказы</h2>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-2xl font-bold">Заказы</h2>
+            {orders.length > 0 && (
+              <Button onClick={handleExportExcel} variant="outline">
+                <Icon name="Download" className="mr-2" size={18} />
+                Экспорт в Excel
+              </Button>
+            )}
+          </div>
           {ordersLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />)}

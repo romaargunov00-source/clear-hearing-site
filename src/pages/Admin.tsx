@@ -50,6 +50,7 @@ export default function Admin() {
 
   // Login state
   const [loginMode, setLoginMode] = useState<"login" | "setup">("login");
+  const [loginUsername, setLoginUsername] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -114,8 +115,14 @@ export default function Admin() {
     return json;
   };
 
+  const ADMIN_USERNAME = "yasn_admin!27_vxod";
+
   const handleLogin = async () => {
     if (!password.trim()) return;
+    if (loginMode !== "setup" && loginUsername.trim() !== ADMIN_USERNAME) {
+      toast({ title: "Неверный логин", description: "Проверьте логин и попробуйте снова", variant: "destructive" });
+      return;
+    }
     setLoginLoading(true);
     try {
       if (loginMode === "setup") {
@@ -284,38 +291,65 @@ export default function Admin() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
               <Icon name="Ear" size={32} className="text-white" />
             </div>
-            <CardTitle className="text-2xl">Админ-панель</CardTitle>
-            <p className="text-sm text-muted-foreground">Ясный слух — центр слуховых аппаратов</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>{loginMode === "setup" ? "Создать пароль" : "Пароль"}</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                placeholder={loginMode === "setup" ? "Придумайте пароль (мин. 4 символа)" : "Введите пароль"}
-                autoFocus
-              />
-              {loginMode === "setup" && (
-                <p className="text-xs text-muted-foreground">Первый вход — установите пароль для админ-панели</p>
-              )}
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Ясный СЛУХ</h1>
+            <p className="text-sm text-gray-500 mt-1">На ясном плане</p>
+          </div>
+          <div className="space-y-4">
+            {loginMode === "setup" ? (
+              <div className="space-y-2">
+                <Label className="text-gray-700">Создать пароль</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                  placeholder="Придумайте пароль (мин. 4 символа)"
+                  autoFocus
+                  className="border-gray-300"
+                />
+                <p className="text-xs text-gray-400">Первый вход — установите пароль для админ-панели</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Логин</Label>
+                  <Input
+                    type="text"
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    placeholder="Введите логин"
+                    autoFocus
+                    className="border-gray-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Пароль</Label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    placeholder="Введите пароль"
+                    className="border-gray-300"
+                  />
+                </div>
+              </>
+            )}
             <Button onClick={handleLogin} disabled={loginLoading} className="w-full bg-primary hover:bg-primary/90 text-white">
               {loginLoading ? "..." : loginMode === "setup" ? "Установить и войти" : "Войти"}
             </Button>
-            <a href="/" className="block text-center text-sm text-muted-foreground hover:text-primary transition">
+            <a href="/" className="block text-center text-sm text-gray-400 hover:text-primary transition">
               ← Вернуться на сайт
             </a>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }

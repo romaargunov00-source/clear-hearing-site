@@ -12,7 +12,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 bg-cover bg-center relative" style={{ backgroundImage: "url('/image.png')" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 bg-cover bg-center relative" style={{ backgroundImage: "url('/image copy copy.png')" }}>
       <div className="absolute inset-0 bg-black/40" />
       <h1 className="relative text-[40vw] md:text-[30vw] lg:text-[28vw] font-black leading-none text-white select-none drop-shadow-2xl">
         404

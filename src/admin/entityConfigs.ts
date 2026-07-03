@@ -1,4 +1,4 @@
-export type FieldType = "text" | "textarea" | "number" | "select" | "image" | "date";
+export type FieldType = "text" | "textarea" | "number" | "select" | "image" | "date" | "gallery" | "sections";
 
 export interface FieldConfig {
   key: string;
@@ -86,6 +86,8 @@ export const entityConfigs: Record<string, EntityConfig> = {
       { key: "title", label: "Заголовок", type: "text", required: true },
       { key: "icon", label: "Иконка (Lucide)", type: "text", placeholder: "Users" },
       { key: "description", label: "Описание", type: "textarea", required: true },
+      { key: "images", label: "Фотографии", type: "gallery" },
+      { key: "sections", label: "Дополнительные блоки (заголовок + содержание)", type: "sections" },
     ],
   },
   advantages: {

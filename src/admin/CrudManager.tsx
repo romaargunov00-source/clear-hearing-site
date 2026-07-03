@@ -11,6 +11,16 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import type { EntityConfig, FieldConfig } from "./entityConfigs";
 
+interface GalleryImage {
+  url: string;
+  caption?: string;
+}
+
+interface AboutSection {
+  title: string;
+  content: string;
+}
+
 interface CrudManagerProps {
   config: EntityConfig;
   categories?: { id: string; name: string }[];
@@ -57,7 +67,15 @@ export default function CrudManager({ config, categories }: CrudManagerProps) {
     const initial: Record<string, string> = {};
     config.fields.forEach((f) => {
       const val = row[f.key];
-      initial[f.key] = val !== null && val !== undefined ? String(val) : "";
+      if (f.type === "gallery") {
+        const imgs = Array.isArray(val) ? val as GalleryImage[] : [];
+        initial[f.key] = JSON.stringify(imgs.map((i) => ({ url: i.url || "", caption: i.caption || "" })));
+      } else if (f.type === "sections") {
+        const secs = Array.isArray(val) ? val as AboutSection[] : [];
+        initial[f.key] = JSON.stringify(secs.map((s) => ({ title: s.title || "", content: s.content || "" })));
+      } else {
+        initial[f.key] = val !== null && val !== undefined ? String(val) : "";
+      }
     });
     setFormData(initial);
     setEditingId(row.id as string);
@@ -74,8 +92,25 @@ export default function CrudManager({ config, categories }: CrudManagerProps) {
     setSaving(true);
     const payload: Record<string, unknown> = {};
     config.fields.forEach((f) => {
-      const val = formData[f.key]?.trim() ?? "";
-      if (val === "") {
+      const raw = formData[f.key] ?? "";
+      const val = raw.trim();
+      if (f.type === "gallery") {
+        let imgs: GalleryImage[] = [];
+        try {
+          imgs = JSON.parse(raw || "[]") as GalleryImage[];
+        } catch {
+          imgs = [];
+        }
+        payload[f.key] = imgs.filter((i) => i.url.trim()).length > 0 ? imgs.filter((i) => i.url.trim()) : null;
+      } else if (f.type === "sections") {
+        let secs: AboutSection[] = [];
+        try {
+          secs = JSON.parse(raw || "[]") as AboutSection[];
+        } catch {
+          secs = [];
+        }
+        payload[f.key] = secs.filter((s) => s.title.trim() || s.content.trim()).length > 0 ? secs.filter((s) => s.title.trim() || s.content.trim()) : null;
+      } else if (val === "") {
         payload[f.key] = null;
       } else if (f.type === "number") {
         payload[f.key] = parseFloat(val);
@@ -154,6 +189,127 @@ export default function CrudManager({ config, categories }: CrudManagerProps) {
             className="rounded-none border-gray-400"
           />
           {value && <img src={value} alt="preview" className="w-full max-h-40 object-contain border border-gray-300" />}
+        </div>
+      );
+    }
+
+    if (field.type === "gallery") {
+      let images: GalleryImage[] = [];
+      try {
+        images = JSON.parse(value || "[]") as GalleryImage[];
+        if (!Array.isArray(images)) images = [];
+      } catch {
+        images = [];
+      }
+
+      const updateGallery = (newImages: GalleryImage[]) => {
+        setFormData((prev) => ({ ...prev, [field.key]: JSON.stringify(newImages) }));
+      };
+
+      return (
+        <div className="space-y-3">
+          {images.map((img, idx) => (
+            <div key={idx} className="border border-gray-300 p-3 space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={img.url}
+                  onChange={(e) => {
+                    const next = [...images];
+                    next[idx] = { ...next[idx], url: e.target.value };
+                    updateGallery(next);
+                  }}
+                  placeholder="https://... (URL фотографии)"
+                  className="rounded-none border-gray-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateGallery(images.filter((_, i) => i !== idx))}
+                  className="border border-red-700 text-red-700 hover:bg-red-50 px-3 text-xs font-bold transition-colors flex-shrink-0"
+                >
+                  Удалить
+                </button>
+              </div>
+              <Input
+                value={img.caption || ""}
+                onChange={(e) => {
+                  const next = [...images];
+                  next[idx] = { ...next[idx], caption: e.target.value };
+                  updateGallery(next);
+                }}
+                placeholder="Подпись к фото (необязательно)"
+                className="rounded-none border-gray-400"
+              />
+              {img.url && <img src={img.url} alt="preview" className="w-full max-h-32 object-contain border border-gray-300" />}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => updateGallery([...images, { url: "", caption: "" }])}
+            className="border border-gray-400 hover:bg-gray-100 px-4 py-2 text-sm font-bold transition-colors"
+          >
+            + Добавить фотографию
+          </button>
+        </div>
+      );
+    }
+
+    if (field.type === "sections") {
+      let sections: AboutSection[] = [];
+      try {
+        sections = JSON.parse(value || "[]") as AboutSection[];
+        if (!Array.isArray(sections)) sections = [];
+      } catch {
+        sections = [];
+      }
+
+      const updateSections = (newSections: AboutSection[]) => {
+        setFormData((prev) => ({ ...prev, [field.key]: JSON.stringify(newSections) }));
+      };
+
+      return (
+        <div className="space-y-3">
+          {sections.map((sec, idx) => (
+            <div key={idx} className="border border-gray-300 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500">Блок {idx + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => updateSections(sections.filter((_, i) => i !== idx))}
+                  className="border border-red-700 text-red-700 hover:bg-red-50 px-3 py-1 text-xs font-bold transition-colors"
+                >
+                  Удалить блок
+                </button>
+              </div>
+              <Input
+                value={sec.title}
+                onChange={(e) => {
+                  const next = [...sections];
+                  next[idx] = { ...next[idx], title: e.target.value };
+                  updateSections(next);
+                }}
+                placeholder="Заголовок блока"
+                className="rounded-none border-gray-400"
+              />
+              <Textarea
+                value={sec.content}
+                onChange={(e) => {
+                  const next = [...sections];
+                  next[idx] = { ...next[idx], content: e.target.value };
+                  updateSections(next);
+                }}
+                placeholder="Содержание блока"
+                rows={4}
+                className="rounded-none border-gray-400"
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => updateSections([...sections, { title: "", content: "" }])}
+            className="border border-gray-400 hover:bg-gray-100 px-4 py-2 text-sm font-bold transition-colors"
+          >
+            + Добавить блок
+          </button>
         </div>
       );
     }

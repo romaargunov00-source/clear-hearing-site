@@ -60,6 +60,8 @@ interface AboutItem {
   id: string;
   title: string;
   description: string;
+  images?: { url: string; caption?: string }[];
+  sections?: { title: string; content: string }[];
 }
 
 interface Article {
@@ -215,7 +217,9 @@ const Index = () => {
         about: (aboutRes.data || []).map((a: any) => ({
           id: a.id,
           title: a.title,
-          description: a.description
+          description: a.description,
+          images: Array.isArray(a.images) ? a.images : [],
+          sections: Array.isArray(a.sections) ? a.sections : [],
         })),
         advantages: (advantagesRes.data && advantagesRes.data.length > 0) ? advantagesRes.data.map((ad: any) => ({
           id: ad.id,
@@ -732,8 +736,38 @@ const Index = () => {
                     <CardHeader>
                       <CardTitle className="text-xl md:text-2xl lg:text-3xl font-black">{item.title}</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
                       <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">{item.description}</p>
+
+                      {item.images && item.images.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                          {item.images.map((img, idx) => (
+                            <figure key={idx} className="overflow-hidden">
+                              <img
+                                src={img.url}
+                                alt={img.caption || item.title}
+                                className="w-full h-48 object-cover"
+                              />
+                              {img.caption && (
+                                <figcaption className="text-xs text-muted-foreground mt-1.5 text-center">
+                                  {img.caption}
+                                </figcaption>
+                              )}
+                            </figure>
+                          ))}
+                        </div>
+                      )}
+
+                      {item.sections && item.sections.length > 0 && (
+                        <div className="space-y-4 pt-2">
+                          {item.sections.map((sec, idx) => (
+                            <div key={idx} className="border-t border-border pt-4">
+                              <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">{sec.title}</h3>
+                              <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">{sec.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))

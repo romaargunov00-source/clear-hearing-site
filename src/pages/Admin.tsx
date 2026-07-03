@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import Icon from "@/components/ui/icon";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
@@ -52,7 +50,6 @@ export default function Admin() {
   const [loginMode, setLoginMode] = useState<"login" | "setup">("login");
   const [loginUsername, setLoginUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [hasPassword, setHasPassword] = useState<boolean | null>(null);
 
@@ -286,121 +283,128 @@ export default function Admin() {
   };
 
   if (!loginChecked) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-white"><div className="h-6 w-6 border-2 border-[#1a3a5c] border-t-transparent animate-spin" /></div>;
   }
 
   if (!authed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
         <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
-              <Icon name="Ear" size={32} className="text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Ясный СЛУХ</h1>
-            <p className="text-sm text-gray-500 mt-1">На ясном плане</p>
+          <div className="text-center mb-6">
+            <h1 className="text-xl font-bold text-[#1a3a5c] tracking-tight">Ясный СЛУХ</h1>
+            <p className="text-xs text-gray-500 mt-1">Панель администратора</p>
           </div>
-          <div className="space-y-4">
+          <div className="border border-gray-300 p-6">
             {loginMode === "setup" ? (
-              <div className="space-y-2">
-                <Label className="text-gray-700">Создать пароль</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  placeholder="Придумайте пароль (мин. 4 символа)"
-                  autoFocus
-                  className="border-gray-300"
-                />
-                <p className="text-xs text-gray-400">Первый вход — установите пароль для админ-панели</p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Логин</Label>
-                  <Input
-                    type="text"
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                    placeholder="Введите логин"
-                    autoFocus
-                    className="border-gray-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Пароль</Label>
+              <div className="space-y-3">
+                <div>
+                  <Label className="block text-xs font-bold text-gray-700 mb-1">Создать пароль</Label>
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                    placeholder="Введите пароль"
-                    className="border-gray-300"
+                    placeholder="Минимум 4 символа"
+                    autoFocus
+                    className="rounded-none border-gray-400"
                   />
+                </div>
+                <p className="text-xs text-gray-500">Первый вход — установите пароль</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="block text-xs font-bold text-gray-700 mb-1">Логин</Label>
+                    <Input
+                      type="text"
+                      value={loginUsername}
+                      onChange={(e) => setLoginUsername(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                      placeholder="Введите логин"
+                      autoFocus
+                      className="rounded-none border-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <Label className="block text-xs font-bold text-gray-700 mb-1">Пароль</Label>
+                    <Input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                      placeholder="Введите пароль"
+                      className="rounded-none border-gray-400"
+                    />
+                  </div>
                 </div>
               </>
             )}
-            <Button onClick={handleLogin} disabled={loginLoading} className="w-full bg-primary hover:bg-primary/90 text-white">
+            <button
+              onClick={handleLogin}
+              disabled={loginLoading}
+              className="w-full mt-4 bg-[#1a3a5c] hover:bg-[#0f2a44] text-white py-2.5 text-sm font-bold transition-colors disabled:opacity-50"
+            >
               {loginLoading ? "..." : loginMode === "setup" ? "Установить и войти" : "Войти"}
-            </Button>
-            <a href="/" className="block text-center text-sm text-gray-400 hover:text-primary transition">
-              ← Вернуться на сайт
-            </a>
+            </button>
+          </div>
+          <div className="text-center mt-4">
+            <a href="/" className="text-xs text-gray-500 hover:text-[#1a3a5c]">← Вернуться на сайт</a>
           </div>
         </div>
       </div>
     );
   }
 
-  const navItems: { key: Section; label: string; icon: string }[] = [
-    { key: "hero", label: "Баннер", icon: "Image" },
-    { key: "orders", label: "Заказы", icon: "ShoppingCart" },
-    { key: "products", label: "Товары", icon: "Package" },
-    { key: "categories", label: "Категории", icon: "FolderTree" },
-    { key: "services", label: "Услуги", icon: "Briefcase" },
-    { key: "articles", label: "Статьи", icon: "Newspaper" },
-    { key: "about_items", label: "О компании", icon: "Info" },
-    { key: "advantages", label: "Преимущества", icon: "Sparkles" },
-    { key: "partners", label: "Партнёры", icon: "Handshake" },
-    { key: "settings", label: "Настройки", icon: "Settings" },
+  const navItems: { key: Section; label: string }[] = [
+    { key: "hero", label: "Баннер" },
+    { key: "orders", label: "Заказы" },
+    { key: "products", label: "Товары" },
+    { key: "categories", label: "Категории" },
+    { key: "services", label: "Услуги" },
+    { key: "articles", label: "Статьи" },
+    { key: "about_items", label: "О компании" },
+    { key: "advantages", label: "Преимущества" },
+    { key: "partners", label: "Партнёры" },
+    { key: "settings", label: "Настройки" },
   ];
 
   const renderSection = () => {
     if (section === "hero") {
       return (
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Баннер главной страницы</h2>
+          <h2 className="text-lg font-bold text-[#1a3a5c]">Баннер главной страницы</h2>
           {heroLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map((i) => <div key={i} className="h-12 rounded bg-muted animate-pulse" />)}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => <div key={i} className="h-10 bg-gray-100 animate-pulse" />)}
             </div>
           ) : (
-            <Card>
-              <CardContent className="space-y-4 py-4">
-                {heroFields.map((field) => (
-                  <div key={field.key} className="space-y-1.5">
-                    <Label>{field.label}{field.required && <span className="text-destructive ml-1">*</span>}</Label>
-                    {field.type === "textarea" ? (
-                      <Textarea
-                        value={heroData[field.key] || ""}
-                        onChange={(e) => setHeroData((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                        rows={4}
-                      />
-                    ) : (
-                      <Input
-                        value={heroData[field.key] || ""}
-                        onChange={(e) => setHeroData((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                      />
-                    )}
-                  </div>
-                ))}
-                <Button onClick={handleHeroSave} disabled={heroSaving} className="bg-primary hover:bg-primary/90 text-white">
-                  {heroSaving ? "Сохранение..." : "Сохранить баннер"}
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="border border-gray-300 p-5 space-y-4">
+              {heroFields.map((field) => (
+                <div key={field.key} className="space-y-1">
+                  <Label className="block text-xs font-bold text-gray-700">
+                    {field.label}{field.required && <span className="text-red-700 ml-1">*</span>}
+                  </Label>
+                  {field.type === "textarea" ? (
+                    <Textarea
+                      value={heroData[field.key] || ""}
+                      onChange={(e) => setHeroData((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      rows={4}
+                      className="rounded-none border-gray-400"
+                    />
+                  ) : (
+                    <Input
+                      value={heroData[field.key] || ""}
+                      onChange={(e) => setHeroData((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      className="rounded-none border-gray-400"
+                    />
+                  )}
+                </div>
+              ))}
+              <button onClick={handleHeroSave} disabled={heroSaving} className="bg-[#1a3a5c] hover:bg-[#0f2a44] text-white px-5 py-2 text-sm font-bold transition-colors disabled:opacity-50">
+                {heroSaving ? "Сохранение..." : "Сохранить баннер"}
+              </button>
+            </div>
           )}
         </div>
       );
@@ -410,96 +414,88 @@ export default function Admin() {
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="text-2xl font-bold">Заказы</h2>
+            <h2 className="text-lg font-bold text-[#1a3a5c]">Заказы</h2>
             {orders.length > 0 && (
-              <Button onClick={handleExportExcel} variant="outline">
-                <Icon name="Download" className="mr-2" size={18} />
+              <button onClick={handleExportExcel} className="border border-gray-400 hover:bg-gray-100 px-4 py-2 text-sm font-bold transition-colors">
                 Экспорт в Excel
-              </Button>
+              </button>
             )}
           </div>
           {ordersLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />)}
+              {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-gray-100 animate-pulse" />)}
             </div>
           ) : orders.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                <Icon name="Inbox" size={48} className="mx-auto mb-4 opacity-50" />
-                <p>Заказов пока нет</p>
-              </CardContent>
-            </Card>
+            <div className="border border-gray-300 py-12 text-center text-gray-500">
+              <p className="text-sm">Заказов пока нет</p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {orders.map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      <div className="space-y-1 flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold">№ {order.id.slice(0, 8)}</span>
-                          <Badge className={statusColor(order.status)}>{statusLabel(order.status)}</Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(order.created_at).toLocaleString("ru-RU")}
-                          </span>
-                        </div>
-                        <p className="text-sm">
-                          {order.customer_first_name} {order.customer_last_name} — {order.customer_phone}
-                        </p>
-                        <p className="text-sm text-muted-foreground truncate">{order.customer_address}</p>
-                        <p className="font-bold text-primary">{order.total.toLocaleString("ru-RU")} ₽</p>
+                <div key={order.id} className="border border-gray-300 p-4">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-sm">№ {order.id.slice(0, 8)}</span>
+                        <Badge className={`${statusColor(order.status)} rounded-none border border-gray-300`}>{statusLabel(order.status)}</Badge>
+                        <span className="text-xs text-gray-500">
+                          {new Date(order.created_at).toLocaleString("ru-RU")}
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-2 flex-shrink-0">
-                        <Select value={order.status} onValueChange={(v) => handleOrderStatusChange(order.id, v)}>
-                          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {orderStatusOptions.map((o) => (
-                              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            if (expandedOrder === order.id) {
-                              setExpandedOrder(null);
-                            } else {
-                              setExpandedOrder(order.id);
-                              fetchOrderItems(order.id);
-                            }
-                          }}
-                        >
-                          <Icon name={expandedOrder === order.id ? "ChevronUp" : "ChevronDown"} className="mr-1" size={16} />
-                          Детали
-                        </Button>
-                      </div>
+                      <p className="text-sm">
+                        {order.customer_first_name} {order.customer_last_name} — {order.customer_phone}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">{order.customer_address}</p>
+                      <p className="font-bold text-sm text-[#1a3a5c]">{order.total.toLocaleString("ru-RU")} ₽</p>
                     </div>
-                    {expandedOrder === order.id && (
-                      <div className="mt-4 pt-4 border-t space-y-3">
-                        {orderItemsLoading ? (
-                          <p className="text-sm text-muted-foreground">Загрузка...</p>
-                        ) : (
-                          <>
-                            <div className="space-y-1">
-                              {orderItems.map((item) => (
-                                <div key={item.id} className="flex justify-between text-sm py-1">
-                                  <span>{item.product_name} × {item.quantity}</span>
-                                  <span className="font-medium">{(item.price * item.quantity).toLocaleString("ru-RU")} ₽</span>
-                                </div>
-                              ))}
-                              {orderItems.length === 0 && <p className="text-sm text-muted-foreground">Состав заказа недоступен</p>}
-                            </div>
-                            <div className="text-sm space-y-1 text-muted-foreground">
-                              {order.customer_email && <p>Email: {order.customer_email}</p>}
-                              {order.customer_comment && <p>Комментарий: {order.customer_comment}</p>}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      <Select value={order.status} onValueChange={(v) => handleOrderStatusChange(order.id, v)}>
+                        <SelectTrigger className="w-40 rounded-none border-gray-400"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {orderStatusOptions.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <button
+                        className="border border-gray-400 hover:bg-gray-100 px-3 py-1.5 text-xs font-bold transition-colors"
+                        onClick={() => {
+                          if (expandedOrder === order.id) {
+                            setExpandedOrder(null);
+                          } else {
+                            setExpandedOrder(order.id);
+                            fetchOrderItems(order.id);
+                          }
+                        }}
+                      >
+                        {expandedOrder === order.id ? "Свернуть" : "Детали"}
+                      </button>
+                    </div>
+                  </div>
+                  {expandedOrder === order.id && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                      {orderItemsLoading ? (
+                        <p className="text-sm text-gray-500">Загрузка...</p>
+                      ) : (
+                        <>
+                          <div className="space-y-1">
+                            {orderItems.map((item) => (
+                              <div key={item.id} className="flex justify-between text-sm py-1">
+                                <span>{item.product_name} × {item.quantity}</span>
+                                <span className="font-medium">{(item.price * item.quantity).toLocaleString("ru-RU")} ₽</span>
+                              </div>
+                            ))}
+                            {orderItems.length === 0 && <p className="text-sm text-gray-500">Состав заказа недоступен</p>}
+                          </div>
+                          <div className="text-sm space-y-1 text-gray-500">
+                            {order.customer_email && <p>Email: {order.customer_email}</p>}
+                            {order.customer_comment && <p>Комментарий: {order.customer_comment}</p>}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -510,33 +506,26 @@ export default function Admin() {
     if (section === "settings") {
       return (
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Настройки</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Сменить пароль</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label>Текущий пароль</Label>
-                <Input type="password" value={settingsCurrent} onChange={(e) => setSettingsCurrent(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Новый пароль</Label>
-                <Input type="password" value={settingsNew} onChange={(e) => setSettingsNew(e.target.value)} />
-              </div>
-              <Button onClick={handleChangePassword} disabled={settingsLoading} className="bg-primary hover:bg-primary/90 text-white">
-                {settingsLoading ? "..." : "Сменить пароль"}
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-4">
-              <Button onClick={handleLogout} variant="outline" className="text-destructive hover:text-destructive">
-                <Icon name="LogOut" className="mr-2" size={18} />
-                Выйти из админ-панели
-              </Button>
-            </CardContent>
-          </Card>
+          <h2 className="text-lg font-bold text-[#1a3a5c]">Настройки</h2>
+          <div className="border border-gray-300 p-5 space-y-4">
+            <h3 className="text-sm font-bold text-gray-800">Сменить пароль</h3>
+            <div>
+              <Label className="block text-xs font-bold text-gray-700 mb-1">Текущий пароль</Label>
+              <Input type="password" value={settingsCurrent} onChange={(e) => setSettingsCurrent(e.target.value)} className="rounded-none border-gray-400" />
+            </div>
+            <div>
+              <Label className="block text-xs font-bold text-gray-700 mb-1">Новый пароль</Label>
+              <Input type="password" value={settingsNew} onChange={(e) => setSettingsNew(e.target.value)} className="rounded-none border-gray-400" />
+            </div>
+            <button onClick={handleChangePassword} disabled={settingsLoading} className="bg-[#1a3a5c] hover:bg-[#0f2a44] text-white px-5 py-2 text-sm font-bold transition-colors disabled:opacity-50">
+              {settingsLoading ? "..." : "Сменить пароль"}
+            </button>
+          </div>
+          <div className="border border-gray-300 p-5">
+            <button onClick={handleLogout} className="border border-red-700 text-red-700 hover:bg-red-50 px-5 py-2 text-sm font-bold transition-colors">
+              Выйти из админ-панели
+            </button>
+          </div>
         </div>
       );
     }
@@ -549,18 +538,13 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-100" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
       {/* Top bar (mobile) */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Icon name="Ear" size={18} className="text-white" />
-          </div>
-          <span className="font-bold">Админ-панель</span>
-        </div>
-        <Button size="sm" variant="ghost" onClick={() => setSidebarOpen(true)}>
-          <Icon name="Menu" size={24} />
-        </Button>
+      <div className="lg:hidden sticky top-0 z-30 bg-[#1a3a5c] border-b border-gray-300 px-4 py-3 flex items-center justify-between">
+        <span className="font-bold text-white text-sm">Ясный СЛУХ — Админ-панель</span>
+        <button onClick={() => setSidebarOpen(true)} className="text-white">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
 
       <div className="flex">
@@ -568,48 +552,38 @@ export default function Admin() {
         {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         <aside className={`
           fixed lg:sticky top-0 left-0 z-50 lg:z-auto
-          h-screen w-64 bg-white border-r flex-shrink-0
+          h-screen w-56 bg-white border-r border-gray-300 flex-shrink-0
           flex flex-col transition-transform duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}>
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Icon name="Ear" size={22} className="text-white" />
-              </div>
-              <div>
-                <p className="font-bold text-sm">Ясный слух</p>
-                <p className="text-xs text-muted-foreground">Админ-панель</p>
-              </div>
-            </div>
+          <div className="px-4 py-4 border-b border-gray-300">
+            <p className="font-bold text-sm text-[#1a3a5c]">Ясный СЛУХ</p>
+            <p className="text-xs text-gray-500">Панель администратора</p>
           </div>
-          <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+          <nav className="flex-1 overflow-y-auto py-2">
             {navItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => { setSection(item.key); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
-                  ${section === item.key ? "bg-primary text-white" : "text-slate-700 hover:bg-slate-100"}`}
+                className={`w-full text-left px-4 py-2.5 text-sm font-medium border-l-4 transition-colors
+                  ${section === item.key ? "border-[#1a3a5c] bg-gray-100 text-[#1a3a5c] font-bold" : "border-transparent text-gray-700 hover:bg-gray-50"}`}
               >
-                <Icon name={item.icon} size={18} />
                 {item.label}
               </button>
             ))}
           </nav>
-          <div className="p-2 border-t space-y-1">
-            <a href="/" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition">
-              <Icon name="ExternalLink" size={18} />
+          <div className="border-t border-gray-300 py-2">
+            <a href="/" className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               Открыть сайт
             </a>
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-red-50 transition">
-              <Icon name="LogOut" size={18} />
+            <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors">
               Выйти
             </button>
           </div>
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 p-4 md:p-8 max-w-5xl">
+        <main className="flex-1 min-w-0 p-4 md:p-6 max-w-5xl">
           {renderSection()}
         </main>
       </div>

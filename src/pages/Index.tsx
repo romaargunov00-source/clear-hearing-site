@@ -726,53 +726,81 @@ const Index = () => {
 
         {activeSection === 'about' && (
           <div className="section-transition">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-primary title-transition">О КОМПАНИИ</h2>
-            <div className="space-y-4 md:space-y-6">
-              {data.about.length === 0 ? (
-                <p className="text-center text-muted-foreground py-12">Информация отсутствует. Добавьте её через админ-панель.</p>
-              ) : (
-                data.about.map((item) => (
-                  <Card key={item.id} className="border-2 card-transition">
-                    <CardHeader>
-                      <CardTitle className="text-xl md:text-2xl lg:text-3xl font-black">{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">{item.description}</p>
+            <div className="text-center mb-10 md:mb-14">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-primary title-transition">О КОМПАНИИ</h2>
+            </div>
+            {data.about.length === 0 ? (
+              <p className="text-center text-muted-foreground py-12">Информация отсутствует. Добавьте её через админ-панель.</p>
+            ) : (
+              <div className="space-y-16 md:space-y-24">
+                {data.about.map((item, itemIdx) => {
+                  const firstImage = item.images && item.images.length > 0 ? item.images[0] : null;
+                  const restImages = item.images && item.images.length > 1 ? item.images.slice(1) : [];
+                  const isEven = itemIdx % 2 === 0;
 
-                      {item.images && item.images.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                          {item.images.map((img, idx) => (
-                            <figure key={idx} className="overflow-hidden">
+                  return (
+                    <div key={item.id}>
+                      {/* Main row: text + first image alternating */}
+                      <div className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 md:gap-12 items-start`}>
+                        {/* Text block */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-2xl md:text-3xl font-black text-foreground mb-4">{item.title}</h3>
+                          <p className="text-sm md:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">{item.description}</p>
+
+                          {/* Extra sections under description */}
+                          {item.sections && item.sections.length > 0 && (
+                            <div className="mt-6 space-y-5">
+                              {item.sections.map((sec, idx) => (
+                                <div key={idx}>
+                                  <h4 className="text-lg md:text-xl font-bold text-foreground mb-2">{sec.title}</h4>
+                                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">{sec.content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* First image */}
+                        {firstImage && (
+                          <div className="w-full md:w-[45%] flex-shrink-0">
+                            <div className="overflow-hidden bg-gray-100">
+                              <img
+                                src={firstImage.url}
+                                alt={firstImage.caption || item.title}
+                                className="w-full h-auto object-contain"
+                                style={{ maxHeight: '420px' }}
+                              />
+                            </div>
+                            {firstImage.caption && (
+                              <p className="text-xs text-muted-foreground mt-2 text-center">{firstImage.caption}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Rest of images in a row below */}
+                      {restImages.length > 0 && (
+                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {restImages.map((img, idx) => (
+                            <figure key={idx} className="overflow-hidden bg-gray-100">
                               <img
                                 src={img.url}
                                 alt={img.caption || item.title}
-                                className="w-full h-48 object-cover"
+                                className="w-full h-auto object-contain"
+                                style={{ maxHeight: '300px' }}
                               />
                               {img.caption && (
-                                <figcaption className="text-xs text-muted-foreground mt-1.5 text-center">
-                                  {img.caption}
-                                </figcaption>
+                                <figcaption className="text-xs text-muted-foreground mt-1.5 px-2 pb-2 text-center">{img.caption}</figcaption>
                               )}
                             </figure>
                           ))}
                         </div>
                       )}
-
-                      {item.sections && item.sections.length > 0 && (
-                        <div className="space-y-4 pt-2">
-                          {item.sections.map((sec, idx) => (
-                            <div key={idx} className="border-t border-border pt-4">
-                              <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">{sec.title}</h3>
-                              <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">{sec.content}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
